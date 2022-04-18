@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+ <robot name="cylinder">
+ 
+   <material name="blue">
+     <color rgba="0 1 1 1"/>
+   </material>
+
+   <material name="black">
+	   <color rgba="0 0 0 1"/>
+   </material>
+
+   <link name="base_link">
+     <visual>
+       <geometry>
+         <cylinder length="0.2" radius="0.2"/>
+       </geometry>
+       <origin rpy="0 0 0" xyz="0 0 0.05"/>
+       <material name="blue"/>
+     </visual>
+     <collision>
+       <geometry>
+         <cylinder length="0.2" radius="0.2"/>
+       </geometry>
+     </collision>
+     <inertial>
+       <mass value="1"/>
+       <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+     </inertial>
+   </link>
+
+   <link name="head_link">
+     <visual>
+       <geometry>
+         <cylinder length="0.04" radius="0.04"/>
+       </geometry>
+       <material name="black"/>
+     </visual>
+     <collision>
+       <geometry>
+         <cylinder length="0.04" radius="0.04"/>
+       </geometry>
+     </collision>
+     <inertial>
+       <mass value="0.001"/>
+       <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+     </inertial>
+
+   </link>
+
+   <joint name="joint_base_head" type="fixed">
+    <origin xyz="-0.1414 -0.1414 0"/>
+    <parent link="base_link"/>
+    <child link="head_link"/>
+  </joint>
+
+
+
+
+   
+ </robot>
