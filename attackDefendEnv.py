@@ -436,7 +436,7 @@ class GlobalAgentsEnv:
     # todo
     def defendReward(self, s, phi, angle1, angle2, velocity1, velocity2):
 
-        if s > self.threat_dis  and  130 < phi < 230 :
+        if s > self.threat_dis and 130 < phi < 230:
             return 0
 
         # 计算相对角度，小于2倍的危险角度就认为可能发生碰撞
@@ -564,19 +564,21 @@ class GlobalAgentsEnv:
                     angle = azimuthAngleWA(base_angle, angle)
                     cur_observe[2].append([other_agent_id, s, phi, velocity, angle])
 
-            cur_observe_sort = sorted(cur_observe[2], key=lambda x: x[1])[:self.reward_agent_num]
-            cur_observe_sort_ = sorted(cur_observe_sort, key=lambda x: x[2])
+            # todo 排序依据
+            cur_observe_sort = sorted(cur_observe[2], key=lambda x: (x[1], x[2]))[:self.reward_agent_num]
             if len(cur_observe_sort) < self.reward_agent_num:
                 for i in range(len(cur_observe_sort), self.reward_agent_num):
                     cur_observe_sort.append([0, 0, 0, 0, 0])
-            cur_observe[2] = cur_observe_sort_
+            cur_observe[2] = cur_observe_sort
 
-            defend_reward = 0
-            for cur_observe_ in cur_observe[2]:
-                if cur_observe[0] == 0:
-                    continue
-                defend_reward += self.defendReward(cur_observe_[1], cur_observe_[2], cur_angle, cur_observe_[4],
-                                                   cur_velocity, cur_observe_[3])
+            # todo
+            # 选择最近的攻击方智能体进行防守
+            cur_observe_ = cur_observe[2][0]
+            if cur_observe_[0] != 0:
+                defend_reward = self.defendReward(cur_observe_[1], cur_observe_[2], cur_angle, cur_observe_[4],
+                                                  cur_velocity, cur_observe_[3])
+            else:
+                defend_reward = 0
             reward[1].append(defend_reward)
             state[1].append(cur_observe)
 

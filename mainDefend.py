@@ -91,10 +91,8 @@ while i_episode < n_episode:
         score += sum(reward)
     print(f"i_episode: {i_episode}")
     print(f"score:{score}")
-    if i_episode % 20 == 0:
-        f.write(str(score / 2000) + '\n')
-        f.flush()
-        score = 0
+    f.write(str(i_episode)+'  '+str(score) + '\n')
+    f.flush()
 
     if i_episode < 40:
         continue
