@@ -320,14 +320,14 @@ class GlobalAgentsEnv:
         planeId = p.loadURDF("plane.urdf")
         p.changeDynamics(planeId, -1, lateralFriction=0, spinningFriction=0, rollingFriction=0)
 
-        # 相机设置
-        p.resetDebugVisualizerCamera(cameraDistance=3, cameraYaw=110, cameraPitch=-30,
-                                     cameraTargetPosition=[-5, 5, 0.3])
+        # # 相机设置
+        # p.resetDebugVisualizerCamera(cameraDistance=3, cameraYaw=110, cameraPitch=-30,
+        #                              cameraTargetPosition=[-5, 5, 0.3])
 
         # 威胁圈
-        theta_delta = 2 / 180 * math.pi
+        theta_delta = 20 / 180 * math.pi
         from_angle = 0
-        to_angle = 2 / 180 * math.pi
+        to_angle = 20 / 180 * math.pi
         froms = []
         tos = []
         while to_angle < 2 * math.pi:
@@ -677,7 +677,6 @@ class GlobalAgentsEnv:
             oil = defend_action[0]
             rudder = defend_action[1]
             # 速度转换
-            # todo
             # 得到速度
             old_speed, old_w = p.getBaseVelocity(agentId)
             velocity, angle = velocityConversionVerse(old_speed)

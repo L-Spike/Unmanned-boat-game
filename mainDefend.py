@@ -35,10 +35,10 @@ g_env = GlobalAgentsEnv(RandomDefenfStrategy(),
                         forbidden_radius=1.5,
                         threat_angle=45,
                         threat_angle_delta=10,
-                        threat_dis=0.8,  # 奖励
-                        capture_dis=0.6,
+                        threat_dis=0.5,  # 奖励
+                        capture_dis=0.2,
                         reward_agent_num=2,
-                        render=True
+                        render=False
                         )
 env = DefendAgentsEnv(g_env)
 
@@ -91,6 +91,10 @@ while i_episode < n_episode:
         score += sum(reward)
     print(f"i_episode: {i_episode}")
     print(f"score:{score}")
+    if i_episode % 20 == 0:
+        f.write(str(score / 2000) + '\n')
+        f.flush()
+        score = 0
 
     if i_episode < 40:
         continue
@@ -130,13 +134,11 @@ while i_episode < n_episode:
                 p_targ.data.add_((1 - tau) * p.data)
 
     if i_episode%100 == 0:
-    
         # 存储网络参数， 完成预测
         time_tuple = time.localtime(time.time())
         model_save_path = "./model_path{}_{}_{}_{}_{}".format(time_tuple[1], time_tuple[2], time_tuple[3], time_tuple[4], i_episode)
         torch.save(model.state_dict(), model_save_path)
 
+
 # model = DGN(n_ant, observation_space, hidden_dim, n_actions)
 # model.load_state_dict(torch.load(model_save_path))
-#
-# model.eval()
