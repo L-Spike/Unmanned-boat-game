@@ -10,6 +10,8 @@ from model import DGN
 from buffer import ReplayBuffer
 from surviving import Surviving
 import time
+import pickle
+import os
 
 from attackDefendEnv import *
 from config import *
@@ -54,7 +56,12 @@ optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
 M_Null = torch.Tensor(np.array([np.eye(n_ant)] * batch_size)).cuda()
 KL = nn.KLDivLoss()
-f = open(sys.argv[1] + '_' + sys.argv[2] + '.txt', 'w')
+
+# data = {"mean": means, "std": stds}
+cumulative_reward = []
+cumulative_rewards = {"Cumulative reward": cumulative_reward}
+
+
 while i_episode < n_episode:
 
     if i_episode > 40:
@@ -89,10 +96,10 @@ while i_episode < n_episode:
         obs = next_obs
         adj = next_adj
         score += sum(reward)
+    cumulative_reward.append(score)
+
     print(f"i_episode: {i_episode}")
     print(f"score:{score}")
-    f.write(str(i_episode)+'  '+str(score) + '\n')
-    f.flush()
 
     if i_episode < 40:
         continue
@@ -131,12 +138,12 @@ while i_episode < n_episode:
                 p_targ.data.mul_(tau)
                 p_targ.data.add_((1 - tau) * p.data)
 
-    if i_episode%100 == 0:
+    if i_episode%1000 == 0:
         # 存储网络参数， 完成预测
         time_tuple = time.localtime(time.time())
-        model_save_path = "./model_path{}_{}_{}_{}_{}".format(time_tuple[1], time_tuple[2], time_tuple[3], time_tuple[4], i_episode)
+        model_save_path = s.path.join("models", "./model_path_{}_{}_{}_{}_{}".format(time_tuple[1], time_tuple[2], time_tuple[3], time_tuple[4], i_episode))
         torch.save(model.state_dict(), model_save_path)
 
-
-# model = DGN(n_ant, observation_space, hidden_dim, n_actions)
-# model.load_state_dict(torch.load(model_save_path))
+time_tuple = time.localtime(time.time())
+with open(os.path.join("train_data", "Cumulative reward_{}_{}_{}_{}".format(time_tuple[1], time_tuple[2], time_tuple[3], time_tuple[4])+".pkl"), "wb") as f:
+    pickle.dump(cumulative_reward, f, pickle.HIGHEST_PROTOCOL)
