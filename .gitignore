@@ -1,5 +1,6 @@
 *.pyc
 venv/
+models/
 *.txt
 __pycache__/
 .idea/

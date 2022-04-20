@@ -1,20 +1,14 @@
-import numpy as np
 import sys
+import os
 
 import torch
-import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
 from model import DGN
-from buffer import ReplayBuffer
-from surviving import Surviving
-import time
-
 from attackDefendEnv import *
 from config import *
-from config import epsilon, score
 
 USE_CUDA = torch.cuda.is_available()
+
+model_path = os.path.join('models', sys.argv[1])
 
 g_env = GlobalAgentsEnv(RandomDefenfStrategy(),
                         SimpleAttackStrategy(
@@ -43,10 +37,8 @@ n_ant = env.n_agent
 observation_space = env.n_observation
 n_actions = env.n_action
 
-model_save_path = "model_path4_19_10_47_10000"
-
 model = DGN(n_ant, observation_space, hidden_dim, n_actions)
-model.load_state_dict(torch.load(model_save_path, map_location="cpu"))
+model.load_state_dict(torch.load(model_path, map_location="cpu"))
 
 while i_episode < run_n_episode:
     i_episode += 1
