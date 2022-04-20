@@ -19,8 +19,6 @@ from config import epsilon, score
 
 USE_CUDA = torch.cuda.is_available()
 
-lamb = float(sys.argv[1])
-
 g_env = GlobalAgentsEnv(RandomDefenfStrategy(),
                         SimpleAttackStrategy(
                             threat_angle=45,
@@ -141,7 +139,7 @@ while i_episode < n_episode:
     if i_episode%1000 == 0:
         # 存储网络参数， 完成预测
         time_tuple = time.localtime(time.time())
-        model_save_path = s.path.join("models", "./model_path_{}_{}_{}_{}_{}".format(time_tuple[1], time_tuple[2], time_tuple[3], time_tuple[4], i_episode))
+        model_save_path = os.path.join("models", "./model_path_{}_{}_{}_{}_{}".format(time_tuple[1], time_tuple[2], time_tuple[3], time_tuple[4], i_episode))
         torch.save(model.state_dict(), model_save_path)
 
 time_tuple = time.localtime(time.time())
