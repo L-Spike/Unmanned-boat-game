@@ -16,11 +16,6 @@ from config import epsilon, score
 
 USE_CUDA = torch.cuda.is_available()
 
-<<<<<<< HEAD
-lamb = float(sys.argv[1])
-
-=======
->>>>>>> adc27c4c7497f6794e2086efc44cc9f29982a6a5
 g_env = GlobalAgentsEnv(RandomDefenfStrategy(),
                         SimpleAttackStrategy(
                             threat_angle=45,
@@ -40,11 +35,7 @@ g_env = GlobalAgentsEnv(RandomDefenfStrategy(),
                         threat_dis=2,  # 奖励
                         capture_dis=0.001,
                         reward_agent_num=2,
-<<<<<<< HEAD
-                        render=False
-=======
                         render=True
->>>>>>> adc27c4c7497f6794e2086efc44cc9f29982a6a5
                         )
 env = DefendAgentsEnv(g_env)
 
@@ -52,62 +43,31 @@ n_ant = env.n_agent
 observation_space = env.n_observation
 n_actions = env.n_action
 
-model_save_path = "model_path4_15_7_8_100000"
-model = DGN(n_ant, observation_space, hidden_dim, n_actions)
-<<<<<<< HEAD
-model.load_state_dict(torch.load(model_save_path))
-model = model.cuda()
-while i_episode < 10:
+model_save_path = "model_path4_19_10_47_10000"
 
-    i_episode += 1
-    score = 0    
-    steps = 0
-=======
+model = DGN(n_ant, observation_space, hidden_dim, n_actions)
 model.load_state_dict(torch.load(model_save_path, map_location="cpu"))
 
 while i_episode < run_n_episode:
     i_episode += 1
     steps = 0
     score = 0
->>>>>>> adc27c4c7497f6794e2086efc44cc9f29982a6a5
     obs, adj = env.reset()
     while steps < max_step:
         steps += 1
         action = []
         n_adj = adj + np.eye(n_ant)
-<<<<<<< HEAD
-        #a_ = np.array([obs])
-        #b_ = np.array([n_adj])
-        #a__ = torch.Tensor(np.array([obs]))
-        #b__ = torch.Tensor(np.array([n_adj]))
-        q, a_w = model(torch.Tensor(np.array([obs])).cuda(), torch.Tensor(np.array([n_adj])).cuda())
-=======
         q, a_w = model(torch.Tensor(np.array([obs])), torch.Tensor(np.array([n_adj])))
-        #q, a_w = model(torch.Tensor(np.array([obs])).cuda(), torch.Tensor(np.array([n_adj])).cuda())
-        # todo
->>>>>>> adc27c4c7497f6794e2086efc44cc9f29982a6a5
         q = q[0]
         for i in range(n_ant):
             a = q[i].argmax().item()
             action.append(a)
 
-<<<<<<< HEAD
         next_obs, next_adj, reward, terminated = env.step(action)
-        obs = next_obs
-        score += sum(reward)
-        adj = next_adj
-
-    print(score)
-#
-# model.eval()
-=======
-
-
-        next_obs, next_adj, reward, terminated = env.step(action)
-        # if terminated:
-        #     print("so_done")
-        #     print(action)
-            # break
+        if terminated:
+            print("so_done")
+            print(action)
+            break
         for ac in action:
             if 15 <= ac <=19:
                 print("iop")
@@ -120,4 +80,3 @@ while i_episode < run_n_episode:
 
     print(f"i_episode: {i_episode}")
     print(f"score:{score}")
->>>>>>> adc27c4c7497f6794e2086efc44cc9f29982a6a5
