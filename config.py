@@ -1,6 +1,17 @@
 cuda_device = 1
 
 not_find_reward = -1
+done_dis = 1.4
+attack_num = 4
+attack_radius = 10
+defend_num = 4
+defend_radius = 2.5
+forbidden_radius = 1.5
+threat_angle = 45
+threat_angle_delta = 10
+threat_dis = 0.5
+capture_dis = 0.2
+reward_agent_num = 2
 
 hidden_dim = 64
 max_step = 500
@@ -8,8 +19,8 @@ GAMMA = 0.99
 n_episode = 10000
 run_n_episode = 10
 i_episode = 0
-time_to_render = 1/50
-capacity = 65000 
+time_to_render = 1 / 50
+capacity = 65000
 batch_size = 64
 n_epoch = 25
 epsilon = 0.9
