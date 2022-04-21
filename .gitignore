@@ -1,7 +1,7 @@
 *.pyc
-venv/
-train_data/
-configs/
 *.txt
+*.pkl
+venv/
+configs/
 __pycache__/
 .idea/
