@@ -1,9 +1,11 @@
+cuda_device = 1
+
 not_find_reward = -1
 
 hidden_dim = 64
 max_step = 500
 GAMMA = 0.99
-n_episode = 100000
+n_episode = 10000
 run_n_episode = 10
 i_episode = 0
 time_to_render = 1/50
