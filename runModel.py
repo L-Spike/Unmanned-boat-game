@@ -1,14 +1,18 @@
 import sys
 import os
-
+import argparse
 import torch
 from model import DGN
 from attackDefendEnv import *
 from config import *
 
 USE_CUDA = torch.cuda.is_available()
-
-model_path = os.path.join('models', sys.argv[1])
+description = 'run model'
+parser = argparse.ArgumentParser(description=description)
+parser.add_argument('path', type=str, help='the path of model')
+args = parser.parse_args()
+file_path = args.path
+model_path = os.path.join('models', file_path)
 
 g_env = GlobalAgentsEnv(RandomDefenfStrategy(),
                         SimpleAttackStrategy(
