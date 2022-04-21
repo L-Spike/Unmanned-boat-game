@@ -58,8 +58,9 @@ M_Null = torch.Tensor(np.array([np.eye(n_ant)] * batch_size)).cuda()
 KL = nn.KLDivLoss()
 
 # data = {"mean": means, "std": stds}
-cumulative_reward = []
-cumulative_rewards = {"Cumulative reward": cumulative_reward}
+cumulative_rewards = []
+losses = []
+evaluating_indicator = {"Cumulative reward": cumulative_rewards, "losses":losses}
 
 
 while i_episode < n_episode:
@@ -96,14 +97,14 @@ while i_episode < n_episode:
         obs = next_obs
         adj = next_adj
         score += sum(reward)
-    cumulative_reward.append(score)
+    cumulative_rewards.append(score)
 
     print(f"i_episode: {i_episode}")
     print(f"score:{score}")
 
     if i_episode < 40:
         continue
-
+    loss_rollouts = []
     for e in range(n_epoch):
 
         O, A, R, Next_O, Matrix, Next_Matrix, D = buff.getBatch(batch_size)
@@ -137,6 +138,10 @@ while i_episode < n_episode:
             for p, p_targ in zip(model.parameters(), model_tar.parameters()):
                 p_targ.data.mul_(tau)
                 p_targ.data.add_((1 - tau) * p.data)
+        loss_value = loss.item()
+        loss_rollouts.append(loss_value)
+
+    losses.append(np.mean(loss_rollouts))
 
     if i_episode%1000 == 0:
         # 存储网络参数， 完成预测
@@ -145,5 +150,5 @@ while i_episode < n_episode:
         torch.save(model.state_dict(), model_save_path)
 
 time_tuple = time.localtime(time.time())
-with open(os.path.join("train_data", "Cumulative reward_{}_{}_{}_{}".format(time_tuple[1], time_tuple[2], time_tuple[3], time_tuple[4])+".pkl"), "wb") as f:
-    pickle.dump(cumulative_reward, f, pickle.HIGHEST_PROTOCOL)
+with open(os.path.join("train_data", "evaluating_indicator_{}_{}_{}_{}".format(time_tuple[1], time_tuple[2], time_tuple[3], time_tuple[4])+".pkl"), "wb") as f:
+    pickle.dump(evaluating_indicator, f, pickle.HIGHEST_PROTOCOL)
