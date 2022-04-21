@@ -18,7 +18,7 @@ from config import *
 from config import epsilon, score
 
 USE_CUDA = torch.cuda.is_available()
-os.environ['CUDA_VISIBLE_DEVICES'] = cuda_device
+os.environ['CUDA_VISIBLE_DEVICES'] = str(cuda_device)
 
 g_env = GlobalAgentsEnv(RandomDefenfStrategy(),
                         SimpleAttackStrategy(
