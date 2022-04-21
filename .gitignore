@@ -1,6 +1,7 @@
 *.pyc
 *.txt
-*.pkl
+models/model*
+train_data/*.pkl
 venv/
 configs/
 __pycache__/
