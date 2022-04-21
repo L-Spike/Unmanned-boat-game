@@ -1,6 +1,5 @@
 *.pyc
 venv/
-models/
 train_data/
 configs/
 *.txt

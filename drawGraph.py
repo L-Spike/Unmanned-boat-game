@@ -1,10 +1,15 @@
-import  pickle
+import pickle
 import os
+import sys
+import argparse
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-
-file_path = 'evaluating_indicator_4_21_0_30.pkl'
+description = 'draw graph'
+parser = argparse.ArgumentParser(description=description)
+parser.add_argument('path', type=str, help='the path of pickle file')
+args = parser.parse_args()
+file_path = args.path
 
 with open(os.path.join("train_data", file_path), "rb") as f:
     data = pickle.load(f)
