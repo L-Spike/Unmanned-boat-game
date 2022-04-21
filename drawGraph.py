@@ -4,7 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 
-file_path = ''
+file_path = 'evaluating_indicator_4_21_0_30.pkl'
 
 with open(os.path.join("train_data", file_path), "rb") as f:
     data = pickle.load(f)

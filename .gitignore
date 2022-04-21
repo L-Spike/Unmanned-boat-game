@@ -1,6 +1,7 @@
 *.pyc
 venv/
 models/
+train_data/
 *.txt
 __pycache__/
 .idea/

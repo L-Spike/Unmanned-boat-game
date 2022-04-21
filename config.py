@@ -10,7 +10,7 @@ forbidden_radius = 1.5
 threat_angle = 45
 threat_angle_delta = 10
 threat_dis = 0.5
-capture_dis = 0.2
+capture_dis = 1
 reward_agent_num = 2
 
 hidden_dim = 64
