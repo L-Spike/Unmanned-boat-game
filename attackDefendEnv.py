@@ -263,12 +263,13 @@ class RandomDefenfStrategy(DefendStrategy):
 
 
 class GlobalAgentsEnv:
-    def __init__(self, defend_stratedy, attack_strategy, done_dis, attack_num, defend_num, attack_radius, defend_radius,
+    def __init__(self, defend_stratedy, attack_strategy, not_find_reward, done_dis, attack_num, defend_num, attack_radius, defend_radius,
                  forbidden_radius,
                  threat_angle_delta, threat_angle, threat_dis, capture_dis, reward_agent_num,
                  render: bool = False, ):
 
         # 定义行为空间和观察空间
+        self.not_find_reward = not_find_reward
         self.done_dis = done_dis
         self.attack_num = attack_num
         self.defend_num = defend_num
@@ -578,7 +579,7 @@ class GlobalAgentsEnv:
                 defend_reward = self.defendReward(cur_observe_[1], cur_observe_[2], cur_angle, cur_observe_[4],
                                                   cur_velocity, cur_observe_[3])
             else:
-                defend_reward = 0
+                defend_reward = self.not_find_reward
             reward[1].append(defend_reward)
             state[1].append(cur_observe)
 

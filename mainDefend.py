@@ -27,6 +27,7 @@ g_env = GlobalAgentsEnv(RandomDefenfStrategy(),
                             small_angle=10,
                             delta_t=0
                         ),
+                        not_find_reward=not_find_reward,
                         done_dis=1.4,
                         attack_num=4,
                         attack_radius=10,

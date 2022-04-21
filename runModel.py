@@ -27,7 +27,7 @@ g_env = GlobalAgentsEnv(RandomDefenfStrategy(),
                         threat_angle=45,
                         threat_angle_delta=10,
                         threat_dis=2,  # 奖励
-                        capture_dis=0.001,
+                        capture_dis=2,
                         reward_agent_num=2,
                         render=True
                         )

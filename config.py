@@ -1,3 +1,5 @@
+not_find_reward = -1
+
 hidden_dim = 64
 max_step = 500
 GAMMA = 0.99
