@@ -1,4 +1,4 @@
-cuda_device = 1
+cuda_device = "1"
 
 not_find_reward = -1
 done_dis = 1.4
