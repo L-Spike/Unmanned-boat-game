@@ -1,5 +1,6 @@
 # coding=utf-8
 import math
+import random
 from random import choice
 import sys
 from abc import ABC
@@ -367,7 +368,7 @@ class GlobalAgentsEnv:
             cur_angle += theta
 
         # 加载攻方智能体初始位置
-        cur_angle = 0
+        cur_angle = random.randint(0,360)
         theta = math.pi * 2 / self.attack_num
         index = 0
         for i in range(self.attack_num):

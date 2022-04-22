@@ -2,9 +2,9 @@ cuda_device = "1"
 
 not_find_reward = -1
 done_dis = 1.4
-attack_num = 4
+attack_num = 2
 attack_radius = 10
-defend_num = 4
+defend_num = 6
 defend_radius = 2.5
 forbidden_radius = 1.5
 threat_angle = 45
