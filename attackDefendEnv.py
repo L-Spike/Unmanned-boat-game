@@ -399,7 +399,7 @@ class GlobalAgentsEnv:
             cur_angle += theta
 
         # 加载攻方智能体初始位置
-        cur_angle = 0
+        cur_angle = random.randint(0, 360)
         theta = math.pi * 2 / self.attack_num
         for agentId in self.attackAgentIds:
             x = self.attack_radius * math.sin(cur_angle)
