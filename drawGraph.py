@@ -18,20 +18,26 @@ file_path = args.path
 with open(os.path.join("train_data", file_path), "rb") as f:
     data = pickle.load(f)
 
-# x1 = data["Cumulative reward"]
 
-# time = range(10)
-# sns.set(style="darkgrid")
-# plt.subplot(1,2,1)
-#
-# data_diy = [[1,2,2],[4,5,6], [7,7,7],[9,8,9]]
-#
-# data1 = data['Cumulative reward'][500:]
+sns.set(style="darkgrid")
+# # sns.set(style="darkgrid", font_scale=1.5)
+
+plt.subplot(1,2,1)
+data1 = data["Cumulative reward"]
+data1 = data1[500:]
+sns.lineplot( data=data1, color="r")
+plt.ylabel("cumulative reward")
+plt.xlabel("episode number")
+plt.title("Results")
+
 # sns.lineplot( data=data_diy, color="r", estimator='mean')
-# # sns.tsplot(time=time, data=x2, color="b", condition="dagger")
-# plt.ylabel("cumulative reward")
-# plt.xlabel("episode Number")
-# plt.title("Results")
+
+plt.subplot(1, 2, 2)  # 图一包含1行2列子图，当前画在第一行第一列图上
+data2 = data['losses'][500:]
+sns.lineplot( data=data2, color="r")
+plt.ylabel("losses")
+plt.xlabel("episode number")
+plt.title("Results")
 
 # plt.subplot(1,2,2)
 # rewards1 = np.array([0, 0.1,0,0.2,0.4,0.5,0.6,0.9,0.9,0.9])
@@ -59,15 +65,5 @@ with open(os.path.join("train_data", file_path), "rb") as f:
 # sns.lineplot( x = 'sepal_width', y = 'sepal_length', data=df, color="r")
 # plt.subplot(1, 2, 2) #图一包含1行2列子图，当前画在第一行第一列图上
 # sns.lineplot(data=df,)
-
-# plt.figure(1)
-
-# # sns.set(style="darkgrid", font_scale=1.5)
-# data2 = data['losses'][500:]
-sns.lineplot( data=data, color="r")
-# # sns.tsplot(time=time, data=x2, color="b", condition="dagger")
-plt.ylabel("losses")
-plt.xlabel("episode Number")
-plt.title("Results")
 
 plt.show()
