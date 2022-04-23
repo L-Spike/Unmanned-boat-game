@@ -1,5 +1,6 @@
 *.pyc
 *.txt
+demoDraw.py
 models/model*
 train_data/*.pkl
 venv/
