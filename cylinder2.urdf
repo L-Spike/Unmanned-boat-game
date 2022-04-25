@@ -14,7 +14,7 @@
        <geometry>
          <cylinder length="0.2" radius="0.2"/>
        </geometry>
-       <origin rpy="0 0 0" xyz="0 0 0.05"/>
+       <origin rpy="0 0 0" xyz="0 0 0.1"/>
        <material name="black"/>
      </visual>
      <collision>
@@ -48,7 +48,7 @@
    </link>
 
    <joint name="joint_base_head" type="fixed">
-    <origin xyz="-0.1414 -0.1414 0"/>
+    <origin xyz="0 0.2 0.1"/>
     <parent link="base_link"/>
     <child link="head_link"/>
   </joint>

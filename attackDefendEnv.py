@@ -320,7 +320,7 @@ class GlobalAgentsEnv:
     def init_agent(self):
         # 将地面设置为光滑平面
         planeId = p.loadURDF("plane.urdf")
-        p.changeDynamics(planeId, -1, lateralFriction=0, spinningFriction=0, rollingFriction=0)
+        p.changeDynamics(planeId, 0, lateralFriction=0, spinningFriction=0, rollingFriction=0)
 
         # # 相机设置
         # p.resetDebugVisualizerCamera(cameraDistance=3, cameraYaw=110, cameraPitch=-30,
@@ -358,7 +358,7 @@ class GlobalAgentsEnv:
         for i in range(self.defend_num):
             x = self.defend_radius * math.sin(cur_angle)
             y = self.defend_radius * math.cos(cur_angle)
-            defendAgentStartPos = [x, y, 0.3]
+            defendAgentStartPos = [x, y, 0]
             agentId = p.loadURDF("cylinder.urdf", defendAgentStartPos, agentStartOrientation)
             self.defendAgentIds.append(agentId)
             self.defendId2index[agentId] = index
@@ -374,7 +374,7 @@ class GlobalAgentsEnv:
         for i in range(self.attack_num):
             x = self.attack_radius * math.sin(cur_angle)
             y = self.attack_radius * math.cos(cur_angle)
-            attackAgentStartPos = [x, y, 0.3]
+            attackAgentStartPos = [x, y, 0]
             agentId = p.loadURDF("cylinder2.urdf", attackAgentStartPos, agentStartOrientation)
             self.attackAgentIds.append(agentId)
             self.attackId2Index[agentId] = index
@@ -394,7 +394,7 @@ class GlobalAgentsEnv:
         for agentId in self.defendAgentIds:
             x = self.defend_radius * math.sin(cur_angle)
             y = self.defend_radius * math.cos(cur_angle)
-            defendAgentStartPos = [x, y, 0.3]
+            defendAgentStartPos = [x, y, 0]
             p.resetBasePositionAndOrientation(agentId, defendAgentStartPos, agentStartOrientation)
             cur_angle += theta
 
@@ -404,7 +404,7 @@ class GlobalAgentsEnv:
         for agentId in self.attackAgentIds:
             x = self.attack_radius * math.sin(cur_angle)
             y = self.attack_radius * math.cos(cur_angle)
-            attackAgentStartPos = [x, y, 0.3]
+            attackAgentStartPos = [x, y, 0]
             p.resetBasePositionAndOrientation(agentId, attackAgentStartPos, agentStartOrientation)
             cur_angle += theta
 
@@ -619,17 +619,15 @@ class GlobalAgentsEnv:
 
     # 训练好之后的运行方式
     def run_one_step(self):
-        state, reward = self.updateStateReward()
-        a_state = state[0]
-        a_reward = reward[0]
-        d_state = state[1]
-        d_reward = reward[1]
+        self.updateStateReward()
+        a_state = self.state[0]
+        a_reward = self.reward[0]
+        d_state = self.state[1]
+        d_reward = self.reward[1]
         self.defend_total_reward += sum(d_reward)
-        print(self.defend_total_reward)
+        # print(self.defend_total_reward)
         d_actions = self.defend_stratedy.generate_actions(d_state)
-
         a_actions = self.attack_strategy.generate_actions(a_state)
-        # a_actions = [[5, 0], [5, 1]]
         self.apply_defend_action2(d_actions)
         self.apply_attack_action2(a_actions)
         p.stepSimulation()
@@ -683,11 +681,19 @@ class GlobalAgentsEnv:
             # 速度转换
             # 得到速度
             old_speed, old_w = p.getBaseVelocity(agentId)
+            # todo
+            old_position, old_orientation = p.getBasePositionAndOrientation(agentId)
+            # old_position = list(self.agentCurPositions[self.id2Index[agentId]])
+            # old_position.append(0)
             velocity, angle = velocityConversionVerse(old_speed)
             velocity, angle = self.changeSpeed(velocity, angle, oil, rudder)
+            # print('defend:')
+            # print(f'angle:{angle}  oil:{oil} rudder:{rudder} velocity: {velocity} old_position{old_position}')
             speed = velocityConversion(velocity, angle)
             # 设置加速度
-            p.resetBaseVelocity(agentId, speed)
+            new_orientation = p.getQuaternionFromEuler([0, 0, -angle * math.pi / 180])
+            p.resetBasePositionAndOrientation(agentId, old_position, new_orientation)
+            p.resetBaseVelocity(agentId, speed, [0, 0, 0])
 
     # 进攻方行为接口
     def apply_attack_action2(self, attack_actions):
@@ -695,11 +701,18 @@ class GlobalAgentsEnv:
             oil = attack_action[0]
             rudder = attack_action[1]
             old_speed, old_w = p.getBaseVelocity(agentId)
+            # old_position = list(self.agentCurPositions[self.id2Index[agentId]])
+            # old_position.append(0)
+            old_position, old_orientation = p.getBasePositionAndOrientation(agentId)
             velocity, angle = velocityConversionVerse(old_speed)
+            # print('attack:')
+            # print(f'angle:{angle}  oil:{oil} rudder:{rudder} velocity: {velocity} old_position{old_position}')
             velocity, angle = self.changeSpeed(velocity, angle, oil, rudder)
             speed = velocityConversion(velocity, angle)
 
             # 设置加速度
+            new_orientation = p.getQuaternionFromEuler([0, 0, -angle * math.pi / 180])
+            p.resetBasePositionAndOrientation(agentId, old_position, new_orientation)
             p.resetBaseVelocity(agentId, speed, [0, 0, 0])
 
     # 速度改变机制
