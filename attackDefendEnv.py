@@ -115,7 +115,7 @@ class DefendStrategy:
 # 简单的规则化进攻策略，采取部分可观测的环境设置
 # 每个agent有一个局部观测的state，嵌入到环境中
 class SimpleAttackStrategy(AttackStrategy):
-    def __init__(self, threat_angle, threat_dis, threat_angle_delta, small_angle, delta_t):
+    def __init__(self, threat_angle, threat_dis, threat_angle_delta, small_angle):
         super().__init__()
 
         self.max_oil = 5
@@ -124,7 +124,6 @@ class SimpleAttackStrategy(AttackStrategy):
         self.max_threat_threshold = threat_dis * threat_angle
         self.threat_angle_delta = threat_angle_delta
         self.small_angle = small_angle
-        self.delta_t = delta_t
 
     # 依据局部观测到的状态产生简单的进攻行为
     # 具体而言是朝者目标直线运动，直到出现碰撞行为，然后选择朝左或者右进行规避，当不出现碰撞行为时再朝着目标进行运动
@@ -266,8 +265,8 @@ class RandomDefenfStrategy(DefendStrategy):
 class GlobalAgentsEnv:
     def __init__(self, defend_stratedy, attack_strategy, not_find_reward, done_dis, attack_num, defend_num, attack_radius, defend_radius,
                  forbidden_radius,
-                 threat_angle_delta, threat_angle, threat_dis, capture_dis, reward_agent_num,
-                 render: bool = False, ):
+                 threat_angle_delta, threat_angle, threat_dis, capture_dis, reward_agent_num, max_velocity, max_turn_angle,
+                 render: bool = False ):
 
         # 定义行为空间和观察空间
         self.not_find_reward = not_find_reward
@@ -285,7 +284,8 @@ class GlobalAgentsEnv:
         self.reward_agent_num = reward_agent_num
         self.local_agent_num = 2  #
         self.target_position = [0, 0]
-        self.max_velocity = 10
+        self.max_velocity = max_velocity
+        self.max_turn_angle = max_turn_angle
         self.communicate_radius = 100
         self.observe_radius = 50
         self.action_space = spaces.Discrete(5)
@@ -359,7 +359,7 @@ class GlobalAgentsEnv:
             x = self.defend_radius * math.sin(cur_angle)
             y = self.defend_radius * math.cos(cur_angle)
             defendAgentStartPos = [x, y, 0]
-            agentId = p.loadURDF("cylinder.urdf", defendAgentStartPos, agentStartOrientation)
+            agentId = p.loadURDF("defendAgent.urdf", defendAgentStartPos, agentStartOrientation)
             self.defendAgentIds.append(agentId)
             self.defendId2index[agentId] = index
             self.id2Index[agentId] = index_
@@ -375,7 +375,7 @@ class GlobalAgentsEnv:
             x = self.attack_radius * math.sin(cur_angle)
             y = self.attack_radius * math.cos(cur_angle)
             attackAgentStartPos = [x, y, 0]
-            agentId = p.loadURDF("cylinder2.urdf", attackAgentStartPos, agentStartOrientation)
+            agentId = p.loadURDF("attackAgent.urdf", attackAgentStartPos, agentStartOrientation)
             self.attackAgentIds.append(agentId)
             self.attackId2Index[agentId] = index
             self.id2Index[agentId] = index_
@@ -438,6 +438,7 @@ class GlobalAgentsEnv:
     # todo
     def defendReward(self, s, phi, angle1, angle2, velocity1, velocity2):
 
+        # 没有危险，不用追捕
         if s > self.threat_dis and 130 < phi < 230:
             return 0
 
@@ -729,13 +730,15 @@ class DefendAgentsEnv(gym.Env, ABC, object):
         super().__init__()
         self.global_agents_env = global_agents_env
         self.n_agent = self.global_agents_env.defend_num
+        m_v = global_agents_env.max_velocity
+        m_a = global_agents_env.max_turn_angle
         self.n_observation = 3 + 10 * self.global_agents_env.reward_agent_num
         self.n_action = 25
-        self.actionIndex2OilRudder = [[0, 0], [0, 1], [0, -1], [0, 5], [0, -5],
-                                      [1, 0], [1, 1], [1, -1], [1, 5], [1, -5],
-                                      [-1, 0], [-1, 1], [-1, -1], [-1, 5], [-1, -5],
-                                      [5, 0], [5, 1], [5, -1], [5, 5], [5, -5],
-                                      [-5, 0], [-5, 1], [-5, -1], [-5, 5], [-5, -5]]
+        self.actionIndex2OilRudder = [[0, 0], [0, 0.2*m_a], [0, -0.2*m_a], [0, m_a], [0, -m_a],
+                                      [0.2*m_v, 0], [0.2*m_v, 0.2*m_a], [0.2*m_v, -0.2*m_a], [0.2*m_v, m_a], [0.2*m_v, -m_a],
+                                      [-1*0.2*m_v, 0], [-1*0.2*m_v, 0.2*m_a], [-1*0.2*m_v, -0.2*m_a], [-1*0.2*m_v, m_a], [-1*0.2*m_v, -m_a],
+                                      [m_v, 0], [m_v, 0.2*m_a], [m_v, -0.2*m_a], [m_v, m_a], [m_v, -m_a],
+                                      [-m_v, 0], [-m_v, 0.2*m_a], [-m_v, -0.2*m_a], [-m_v, m_a], [-m_v, -m_a]]
 
     def step(self, actions):
         actions_ = []

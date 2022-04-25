@@ -22,11 +22,10 @@ os.environ['CUDA_VISIBLE_DEVICES'] = cuda_device
 
 g_env = GlobalAgentsEnv(RandomDefenfStrategy(),
                         SimpleAttackStrategy(
-                            threat_angle=45,
-                            threat_dis=0.5,  # 攻击策略
-                            threat_angle_delta=10,
-                            small_angle=10,
-                            delta_t=0
+                            threat_angle=threat_angle,
+                            threat_dis=attack_threat_dis,  # 攻击策略
+                            threat_angle_delta=threat_angle_delta,
+                            small_angle=small_angle,
                         ),
                         not_find_reward=not_find_reward,
                         done_dis=done_dis,
@@ -37,9 +36,11 @@ g_env = GlobalAgentsEnv(RandomDefenfStrategy(),
                         forbidden_radius=forbidden_radius,
                         threat_angle=threat_angle,
                         threat_angle_delta=threat_angle_delta,
-                        threat_dis=threat_dis,  # 奖励
+                        threat_dis=defend_threat_dis,  # 奖励
                         capture_dis=capture_dis,
                         reward_agent_num=reward_agent_num,
+                        max_velocity=max_velocity,
+                        max_turn_angle=max_turn_angle,
                         render=False
                         )
 env = DefendAgentsEnv(g_env)
