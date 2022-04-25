@@ -1,12 +1,11 @@
 from attackDefendEnv import *
-
+from config import  *
 env = GlobalAgentsEnv(RandomDefenfStrategy(),
                       SimpleAttackStrategy(
                           threat_angle=45,
                           threat_dis=0.5,  # 攻击策略
                           threat_angle_delta=10,
                           small_angle=10,
-                          delta_t=0
                       ),
                       attack_num=4,
                       attack_radius=7,
@@ -17,6 +16,10 @@ env = GlobalAgentsEnv(RandomDefenfStrategy(),
                       threat_angle_delta=10,
                       threat_dis=0.5,  # 奖励
                       capture_dis=0.2,
+                      not_find_reward=not_find_reward,
+                      max_velocity=max_velocity,
+                      max_turn_angle=max_turn_angle,
+                      done_dis=done_dis,
                       render=False
                       )
 

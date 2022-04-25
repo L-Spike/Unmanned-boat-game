@@ -31,6 +31,9 @@ elif config_name == 1:
     from configs.config1 import *
 elif config_name == 2:
     from configs.config2 import *
+else:
+    print(f'invalid config name:{config_name}!')
+    exit(0)
 
 
 USE_CUDA = torch.cuda.is_available()
