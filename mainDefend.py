@@ -12,10 +12,26 @@ from surviving import Surviving
 import time
 import pickle
 import os
+import argparse
 
 from attackDefendEnv import *
 from config import *
 from config import epsilon, score
+
+USE_CUDA = torch.cuda.is_available()
+description = 'main defend'
+parser = argparse.ArgumentParser(description=description)
+parser.add_argument('name', type=int, help='the name of config file')
+args = parser.parse_args()
+config_name = args.name
+
+if config_name == 0:
+    from config import *
+elif config_name == 1:
+    from configs.config1 import *
+elif config_name == 2:
+    from configs.config2 import *
+
 
 USE_CUDA = torch.cuda.is_available()
 os.environ['CUDA_VISIBLE_DEVICES'] = cuda_device

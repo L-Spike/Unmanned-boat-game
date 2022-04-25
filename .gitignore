@@ -4,6 +4,5 @@ demos/
 models/model*
 train_data/*.pkl
 venv/
-configs/
 __pycache__/
 .idea/

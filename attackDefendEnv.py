@@ -581,6 +581,7 @@ class GlobalAgentsEnv:
                 defend_reward = self.defendReward(cur_observe_[1], cur_observe_[2], cur_angle, cur_observe_[4],
                                                   cur_velocity, cur_observe_[3])
             else:
+                # 处理lazy？  未发现敌方
                 defend_reward = self.not_find_reward
             reward[1].append(defend_reward)
             state[1].append(cur_observe)
