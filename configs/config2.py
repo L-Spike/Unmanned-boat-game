@@ -1,6 +1,6 @@
 cuda_device = "1"
 
-not_find_reward = -1
+not_find_reward = -0.05
 done_dis = 1.4
 attack_num = 2
 attack_radius = 10
