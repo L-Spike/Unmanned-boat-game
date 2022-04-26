@@ -18,7 +18,7 @@ defend_threat_dis = 4
 capture_dis = 1
 reward_agent_num = 2
 max_velocity = 5
-max_turn_angle = 5
+max_turn_angle = 4
 communicate_radius = 100
 observe_radius = 100
 
