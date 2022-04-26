@@ -309,8 +309,8 @@ class GlobalAgentsEnv:
         self.target_position = [0, 0]
         self.max_velocity = max_velocity
         self.max_turn_angle = max_turn_angle
-        self.communicate_radius = 100
-        self.observe_radius = 50
+        self.communicate_radius = communicate_radius
+        self.observe_radius = observe_radius
         self.action_space = spaces.Discrete(5)
         self.observation_space = spaces.Discrete(2)
 
