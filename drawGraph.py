@@ -15,17 +15,17 @@ file_path = args.path
 
 # plt.figure(1)
 # # plt.subplot(1, 2, 1) #图一包含1行2列子图，当前画在第一行第一列图上
-with open(os.path.join("train_data", file_path), "rb") as f:
+# with open(os.path.join("train_data", file_path), "rb") as f:
+with open(file_path, "rb") as f:
     data = pickle.load(f)
-
 
 sns.set(style="darkgrid")
 # # sns.set(style="darkgrid", font_scale=1.5)
 
-plt.subplot(1,2,1)
+plt.subplot(1, 2, 1)
 data1 = data["Cumulative reward"]
 data1 = data1[500:]
-sns.lineplot( data=data1, color="r")
+sns.lineplot(data=data1, color="r")
 plt.ylabel("cumulative reward")
 plt.xlabel("episode number")
 plt.title("Results")

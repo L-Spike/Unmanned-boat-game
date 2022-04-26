@@ -305,8 +305,7 @@ class GlobalAgentsEnv:
         self.threat_dis = defend_threat_dis
         self.capture_dis = capture_dis
         self.reward_agent_num = reward_agent_num
-        self.local_agent_num = 2  #
-        self.target_position = [0, 0]
+        self.target_position = target_position
         self.max_velocity = max_velocity
         self.max_turn_angle = max_turn_angle
         self.communicate_radius = communicate_radius
@@ -789,17 +788,31 @@ class DefendAgentsEnv(gym.Env, ABC, object):
 
 
 class AttackAgentsEnv(gym.Env, ABC):
-    def __int__(self):
-        self.global_agents_env = GlobalAgentsEnv()
-        pass
+    def __int__(self, global_agents_env: GlobalAgentsEnv):
+        self.global_agents_env = global_agents_env
+        self.n_agent = self.global_agents_env.defend_num
+        m_v = global_agents_env.max_velocity
+        m_a = global_agents_env.max_turn_angle
+        self.n_observation = 3 + 10 * self.global_agents_env.reward_agent_num
+        self.n_action = 25
+        self.actionIndex2OilRudder = [[0, 0], [0, 0.2 * m_a], [0, -0.2 * m_a], [0, m_a], [0, -m_a],
+                                      [0.2 * m_v, 0], [0.2 * m_v, 0.2 * m_a], [0.2 * m_v, -0.2 * m_a], [0.2 * m_v, m_a],
+                                      [0.2 * m_v, -m_a],
+                                      [-1 * 0.2 * m_v, 0], [-1 * 0.2 * m_v, 0.2 * m_a], [-1 * 0.2 * m_v, -0.2 * m_a],
+                                      [-1 * 0.2 * m_v, m_a], [-1 * 0.2 * m_v, -m_a],
+                                      [m_v, 0], [m_v, 0.2 * m_a], [m_v, -0.2 * m_a], [m_v, m_a], [m_v, -m_a],
+                                      [-m_v, 0], [-m_v, 0.2 * m_a], [-m_v, -0.2 * m_a], [-m_v, m_a], [-m_v, -m_a]]
 
-    def step(self, action):
-        state, reward, done, info = self.global_agents_env.apply_attack_action(action)
-        return state, reward, done, info
+    def step(self, actions):
+        actions_ = []
+        for action in actions:
+            actions_.append(self.actionIndex2OilRudder[action])
+        state, adj, reward, done = self.global_agents_env.apply_attack_action(actions_)
+        return state, adj, reward, done
 
     def reset(self):
-        state = 0
-        return
+        state, adj = self.global_agents_env.reset()
+        return state, adj
 
     def render(self, mode='human'):
         pass

@@ -12,8 +12,8 @@ parser = argparse.ArgumentParser(description=description)
 parser.add_argument('path', type=str, help='the path of model')
 parser.add_argument('--name', type=int, default=0, help='the name of config')
 args = parser.parse_args()
-file_path = args.path
-model_path = os.path.join('models', file_path)
+model_path = args.path
+# model_path = os.path.join('models', file_path)
 
 config_name = args.name
 if config_name == 0:

@@ -21,6 +21,7 @@ max_velocity = 5
 max_turn_angle = 5
 communicate_radius = 100
 observe_radius = 100
+target_position = [0, 0]
 
 hidden_dim = 64
 max_step = 1500
