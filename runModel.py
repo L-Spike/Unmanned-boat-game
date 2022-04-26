@@ -10,7 +10,7 @@ USE_CUDA = torch.cuda.is_available()
 description = 'run model'
 parser = argparse.ArgumentParser(description=description)
 parser.add_argument('path', type=str, help='the path of model')
-parser.add_argument('--name', type=int, help='the name of config')
+parser.add_argument('--name', type=int, default=0, help='the name of config')
 args = parser.parse_args()
 file_path = args.path
 model_path = os.path.join('models', file_path)

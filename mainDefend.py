@@ -21,7 +21,7 @@ from config import epsilon, score
 USE_CUDA = torch.cuda.is_available()
 description = 'main defend'
 parser = argparse.ArgumentParser(description=description)
-parser.add_argument('name', type=int, help='the name of config file')
+parser.add_argument('--name', type=int, default=0, help='the name of config file')
 args = parser.parse_args()
 config_name = args.name
 
