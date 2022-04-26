@@ -290,6 +290,7 @@ class GlobalAgentsEnv:
     def __init__(self, defend_stratedy, attack_strategy,
                  render: bool = False):
 
+        self.factor = factor
         self.capture_reward = capture_reward
         self.forbidden_reward = forbidden_reward
         self.not_find_reward = not_find_reward
@@ -466,7 +467,7 @@ class GlobalAgentsEnv:
         target_angle = phi + alpha * symbol
         target_angle_delta = relativeAngle(target_angle, angle1)
 
-        reward_item = d * target_angle_delta
+        reward_item = d * target_angle_delta * self.factor
         if s > self.capture_dis:
             return -reward_item
         else:
