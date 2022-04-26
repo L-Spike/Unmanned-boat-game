@@ -40,26 +40,7 @@ USE_CUDA = torch.cuda.is_available()
 os.environ['CUDA_VISIBLE_DEVICES'] = cuda_device
 
 g_env = GlobalAgentsEnv(RandomDefenfStrategy(),
-                        SimpleAttackStrategy(
-                            threat_angle=threat_angle,
-                            threat_dis=attack_threat_dis,  # 攻击策略
-                            threat_angle_delta=threat_angle_delta,
-                            small_angle=small_angle,
-                        ),
-                        not_find_reward=not_find_reward,
-                        done_dis=done_dis,
-                        attack_num=attack_num,
-                        attack_radius=attack_radius,
-                        defend_num=defend_num,
-                        defend_radius=defend_radius,
-                        forbidden_radius=forbidden_radius,
-                        threat_angle=threat_angle,
-                        threat_angle_delta=threat_angle_delta,
-                        threat_dis=defend_threat_dis,  # 奖励
-                        capture_dis=capture_dis,
-                        reward_agent_num=reward_agent_num,
-                        max_velocity=max_velocity,
-                        max_turn_angle=max_turn_angle,
+                        SimpleAttackStrategy(),
                         render=False
                         )
 env = DefendAgentsEnv(g_env)

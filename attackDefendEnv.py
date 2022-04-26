@@ -11,6 +11,8 @@ import pybullet_data
 import gym
 from gym import spaces
 
+from config import *
+
 
 def velocityConversion(velocity, angle):
     velocityX = velocity * np.sin(angle * math.pi / 180)
@@ -115,13 +117,13 @@ class DefendStrategy:
 # 简单的规则化进攻策略，采取部分可观测的环境设置
 # 每个agent有一个局部观测的state，嵌入到环境中
 class SimpleAttackStrategy(AttackStrategy):
-    def __init__(self, threat_angle, threat_dis, threat_angle_delta, small_angle):
+    def __init__(self):
         super().__init__()
 
         self.max_oil = 5
         self.threat_angle = threat_angle
-        self.threat_dis = threat_dis
-        self.max_threat_threshold = threat_dis * threat_angle
+        self.threat_dis = attack_threat_dis
+        self.max_threat_threshold = attack_threat_dis * threat_angle
         self.threat_angle_delta = threat_angle_delta
         self.small_angle = small_angle
 
@@ -262,13 +264,34 @@ class RandomDefenfStrategy(DefendStrategy):
         return actions
 
 
-class GlobalAgentsEnv:
-    def __init__(self, defend_stratedy, attack_strategy, not_find_reward, done_dis, attack_num, defend_num, attack_radius, defend_radius,
-                 forbidden_radius,
-                 threat_angle_delta, threat_angle, threat_dis, capture_dis, reward_agent_num, max_velocity, max_turn_angle,
-                 render: bool = False ):
+def drawCircle(radius, color, theta_delta):
+    from_angle = 0
+    to_angle = 20 / 180 * math.pi
+    froms = []
+    tos = []
+    while to_angle < 2 * math.pi:
+        from_point = [radius * math.sin(from_angle),
+                      radius * math.cos(from_angle), 0]
+        to_point = [radius * math.sin(to_angle), radius * math.cos(to_angle), 0]
+        from_angle = to_angle
+        to_angle += theta_delta
+        froms.append(from_point)
+        tos.append(to_point)
+    for f, t in zip(froms, tos):
+        p.addUserDebugLine(
+            lineFromXYZ=f,
+            lineToXYZ=t,
+            lineColorRGB=color,
+            lineWidth=3
+        )
 
-        # 定义行为空间和观察空间
+
+class GlobalAgentsEnv:
+    def __init__(self, defend_stratedy, attack_strategy,
+                 render: bool = False):
+
+        self.capture_reward = capture_reward
+        self.forbidden_reward = forbidden_reward
         self.not_find_reward = not_find_reward
         self.done_dis = done_dis
         self.attack_num = attack_num
@@ -276,10 +299,10 @@ class GlobalAgentsEnv:
         self.attack_radius = attack_radius
         self.defend_radius = defend_radius
         self.forbidden_radius = forbidden_radius
-        self.not_to_catch_reward = -20
+        self.not_to_catch_reward = not_to_catch_reward
         self.threat_angle_delta = threat_angle_delta
         self.threat_angle = threat_angle
-        self.threat_dis = threat_dis
+        self.threat_dis = defend_threat_dis
         self.capture_dis = capture_dis
         self.reward_agent_num = reward_agent_num
         self.local_agent_num = 2  #
@@ -326,26 +349,11 @@ class GlobalAgentsEnv:
         # p.resetDebugVisualizerCamera(cameraDistance=3, cameraYaw=110, cameraPitch=-30,
         #                              cameraTargetPosition=[-5, 5, 0.3])
 
-        # 威胁圈
-        theta_delta = 20 / 180 * math.pi
-        from_angle = 0
-        to_angle = 20 / 180 * math.pi
-        froms = []
-        tos = []
-        while to_angle < 2 * math.pi:
-            from_point = [self.forbidden_radius * math.sin(from_angle), self.forbidden_radius * math.cos(from_angle), 0]
-            to_point = [self.forbidden_radius * math.sin(to_angle), self.forbidden_radius * math.cos(to_angle), 0]
-            from_angle = to_angle
-            to_angle += theta_delta
-            froms.append(from_point)
-            tos.append(to_point)
-        for f, t in zip(froms, tos):
-            p.addUserDebugLine(
-                lineFromXYZ=f,
-                lineToXYZ=t,
-                lineColorRGB=[0, 0, 0],
-                lineWidth=3
-            )
+        # 禁止圈
+        drawCircle(self.forbidden_radius, [1, 1, 1], theta_delta=30 / 180 * math.pi)
+
+        # 结束圈
+        drawCircle(self.done_dis, [1, 1, 1], theta_delta=40 / 180 * math.pi)
 
         # 设置agent的初始朝向
         agentStartOrientation = p.getQuaternionFromEuler([0, 0, 0])
@@ -368,7 +376,7 @@ class GlobalAgentsEnv:
             cur_angle += theta
 
         # 加载攻方智能体初始位置
-        cur_angle = random.randint(0,360)
+        cur_angle = random.randint(0, 360)
         theta = math.pi * 2 / self.attack_num
         index = 0
         for i in range(self.attack_num):
@@ -435,12 +443,12 @@ class GlobalAgentsEnv:
     def set_attack_strategy(self, attack_strategy: AttackStrategy):
         self.attack_strategy: AttackStrategy = attack_strategy
 
-    # todo
+    # 守方reward
     def defendReward(self, s, phi, angle1, angle2, velocity1, velocity2):
 
-        # 没有危险，不用追捕
-        if s > self.threat_dis and 130 < phi < 230:
-            return 0
+        # # 没有危险，不用追捕
+        # if s > self.threat_dis and 130 < phi < 230:
+        #     return 0
 
         # 计算相对角度，小于2倍的危险角度就认为可能发生碰撞
         re_angle = relativeAngle(phi, angle1)
@@ -463,7 +471,14 @@ class GlobalAgentsEnv:
         if s > self.capture_dis:
             return -reward_item
         else:
+            return self.capture_reward
+
+    # 攻方reward
+    def attackReward(self, s, angle):
+        if s < self.done_dis:
             return 10
+        if angle < self.done_dis:
+            return 5
 
     def updateCurPositionsVelocities(self):
         for agent_id in self.attackAgentIds:
@@ -586,6 +601,11 @@ class GlobalAgentsEnv:
             reward[1].append(defend_reward)
             state[1].append(cur_observe)
 
+        # 进入极端距离的负奖励
+        ex_threat_r = self.getForbiddenReward()
+        for i in range(self.defend_num):
+            reward[1][i] += ex_threat_r
+
         # 修改reward
         self.state = state
         self.reward = reward
@@ -615,6 +635,13 @@ class GlobalAgentsEnv:
             if getDis(a_position, self.target_position) < self.done_dis:
                 return True
         return False
+
+    def getForbiddenReward(self):
+        for agent_id in self.attackAgentIds:
+            a_position = self.agentCurPositions[self.id2Index[agent_id]]
+            if getDis(a_position, self.target_position) < self.forbidden_radius:
+                return self.forbidden_reward
+        return 0
 
     def getInfo(self):
         pass
@@ -735,11 +762,13 @@ class DefendAgentsEnv(gym.Env, ABC, object):
         m_a = global_agents_env.max_turn_angle
         self.n_observation = 3 + 10 * self.global_agents_env.reward_agent_num
         self.n_action = 25
-        self.actionIndex2OilRudder = [[0, 0], [0, 0.2*m_a], [0, -0.2*m_a], [0, m_a], [0, -m_a],
-                                      [0.2*m_v, 0], [0.2*m_v, 0.2*m_a], [0.2*m_v, -0.2*m_a], [0.2*m_v, m_a], [0.2*m_v, -m_a],
-                                      [-1*0.2*m_v, 0], [-1*0.2*m_v, 0.2*m_a], [-1*0.2*m_v, -0.2*m_a], [-1*0.2*m_v, m_a], [-1*0.2*m_v, -m_a],
-                                      [m_v, 0], [m_v, 0.2*m_a], [m_v, -0.2*m_a], [m_v, m_a], [m_v, -m_a],
-                                      [-m_v, 0], [-m_v, 0.2*m_a], [-m_v, -0.2*m_a], [-m_v, m_a], [-m_v, -m_a]]
+        self.actionIndex2OilRudder = [[0, 0], [0, 0.2 * m_a], [0, -0.2 * m_a], [0, m_a], [0, -m_a],
+                                      [0.2 * m_v, 0], [0.2 * m_v, 0.2 * m_a], [0.2 * m_v, -0.2 * m_a], [0.2 * m_v, m_a],
+                                      [0.2 * m_v, -m_a],
+                                      [-1 * 0.2 * m_v, 0], [-1 * 0.2 * m_v, 0.2 * m_a], [-1 * 0.2 * m_v, -0.2 * m_a],
+                                      [-1 * 0.2 * m_v, m_a], [-1 * 0.2 * m_v, -m_a],
+                                      [m_v, 0], [m_v, 0.2 * m_a], [m_v, -0.2 * m_a], [m_v, m_a], [m_v, -m_a],
+                                      [-m_v, 0], [-m_v, 0.2 * m_a], [-m_v, -0.2 * m_a], [-m_v, m_a], [-m_v, -m_a]]
 
     def step(self, actions):
         actions_ = []
