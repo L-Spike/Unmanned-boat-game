@@ -27,7 +27,7 @@ else:
     exit(0)
 
 
-g_env = GlobalAgentsEnv(RandomDefenfStrategy(),
+g_env = GlobalAgentsEnv(RandomDefendStrategy(),
                         SimpleAttackStrategy(),
                         render=True
                         )

@@ -1,6 +1,8 @@
 cuda_device = "1"
 
 factor = 4
+turn_radius = 2
+attack_reward_factor = 1
 not_find_reward = -0.1
 forbidden_reward = -10
 capture_reward = 1.5

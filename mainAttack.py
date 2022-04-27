@@ -14,10 +14,11 @@ import os
 import argparse
 
 from attackDefendEnv import *
+from config import *
 from config import epsilon
 
 USE_CUDA = torch.cuda.is_available()
-description = 'main defend'
+description = 'main attack'
 parser = argparse.ArgumentParser(description=description)
 parser.add_argument('--name', type=int, default=0, help='the name of config file')
 args = parser.parse_args()
@@ -41,7 +42,7 @@ g_env = GlobalAgentsEnv(RandomDefendStrategy(),
                         SimpleAttackStrategy(),
                         render=False
                         )
-env = DefendAgentsEnv(g_env)
+env = AttackAgentsEnv(g_env)
 
 n_ant = env.n_agent
 observation_space = env.n_observation
@@ -146,9 +147,9 @@ while i_episode < n_episode:
     if i_episode%1000 == 0:
         # 存储网络参数， 完成预测
         time_tuple = time.localtime(time.time())
-        model_save_path = os.path.join("models", "./model_path_{}_{}_{}_{}_{}".format(time_tuple[1], time_tuple[2], time_tuple[3], time_tuple[4], i_episode))
+        model_save_path = os.path.join("attack_models", "./model_path_{}_{}_{}_{}_{}".format(time_tuple[1], time_tuple[2], time_tuple[3], time_tuple[4], i_episode))
         torch.save(model.state_dict(), model_save_path)
 
 time_tuple = time.localtime(time.time())
-with open(os.path.join("train_data", "evaluating_indicator_{}_{}_{}_{}".format(time_tuple[1], time_tuple[2], time_tuple[3], time_tuple[4])+".pkl"), "wb") as f:
+with open(os.path.join("attack_train_data", "evaluating_indicator_{}_{}_{}_{}".format(time_tuple[1], time_tuple[2], time_tuple[3], time_tuple[4])+".pkl"), "wb") as f:
     pickle.dump(evaluating_indicator, f, pickle.HIGHEST_PROTOCOL)

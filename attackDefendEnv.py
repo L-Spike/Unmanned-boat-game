@@ -248,14 +248,14 @@ class SimpleAttackStrategy(AttackStrategy):
         return threat_item, d, target_angle_delta_with_symbol
 
 
-class RandomDefenfStrategy(DefendStrategy):
+class RandomDefendStrategy(DefendStrategy):
     def __init__(self):
         super().__init__()
 
     # 防守方随机选取动作
     def generate_actions(self, states):
-        oil_range = [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5]
-        rudder_range = [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5]
+        oil_range = [-5, -1, 0, 1, 5]
+        rudder_range = [-5, 1, 0, 1, 5]
         actions = []
         for i in range(len(states[0])):
             rudder = choice(rudder_range)
@@ -290,6 +290,8 @@ class GlobalAgentsEnv:
     def __init__(self, defend_stratedy, attack_strategy,
                  render: bool = False):
 
+        self.attack_reward_factor = attack_reward_factor
+        self.turn_radius = turn_radius
         self.factor = factor
         self.capture_reward = capture_reward
         self.forbidden_reward = forbidden_reward
@@ -416,9 +418,16 @@ class GlobalAgentsEnv:
             p.resetBasePositionAndOrientation(agentId, attackAgentStartPos, agentStartOrientation)
             cur_angle += theta
 
+    def attackReset(self):
+        self.reset()
+        self.updateStateReward()
+        a_state, _ = self.getAttackStateReward()
+        return a_state, self.attack_adj
+
+    def defendReset(self):
+        self.reset()
         self.updateStateReward()
         d_state, _ = self.getDefendStateReward()
-
         return d_state, self.defend_adj
 
     def transformDefendState(self, state):
@@ -495,6 +504,17 @@ class GlobalAgentsEnv:
             velocity, _ = p.getBaseVelocity(agent_id)
             self.agentCurVelocities[self.id2Index[agent_id]] = velocity
 
+    def attackRewardDisAngle(self, dis, angle):
+        # math.pi*d
+        # phi - sin(phi)
+        angle = 360 - angle if angle > 180 else angle
+        angle = angle * math.pi / 180
+        change_item = self.turn_radius * abs(angle - math.sin(angle))
+        return -(dis + change_item) * self.attack_reward_factor
+        
+    def attackRewardDis(self, dis):
+        return -dis * self.attack_reward_factor
+
     def updateStateReward(self):
         state = [[], []]
         reward = [[], []]
@@ -503,6 +523,7 @@ class GlobalAgentsEnv:
         self.updateCurPositionsVelocities()
         # 计算邻接矩阵
         self.updateDefendAdj()
+        self.updateAttackAdj()
 
         # 攻方的观测， 再此过程中得到奖励
         for cur_agent_id in self.attackAgentIds:
@@ -516,7 +537,12 @@ class GlobalAgentsEnv:
             # velocity, angle]...], [[ther_agent_id, s, phi, velocity, angle],...], dis]
 
             cur_observe = [[cur_velocity, cur_angle], [], [], -1]
-            cur_observe[3] = getDis(self.target_position, cur_position)
+            dis = getDis(self.target_position, cur_position)
+            cur_observe[3] = dis
+
+            # calculate attack reward
+            attack_reward = self.attackRewardDisAngle(dis, cur_angle)
+            reward[0].append(attack_reward)
 
             for other_agent_id in self.attackAgentIds:
                 if cur_agent_id == other_agent_id:
@@ -543,7 +569,7 @@ class GlobalAgentsEnv:
 
             state[0].append(cur_observe)
 
-        # 守方的观测
+        # observe for defend
         for cur_agent_id in self.defendAgentIds:
             cur_position = self.agentCurPositions[self.id2Index[cur_agent_id]]
             cur_speed = self.agentCurVelocities[self.id2Index[cur_agent_id]]
@@ -611,7 +637,6 @@ class GlobalAgentsEnv:
         self.reward = reward
 
     def updateDefendAdj(self):
-
         for agent_id in self.defendAgentIds:
             pos1 = self.agentCurPositions[self.id2Index[agent_id]]
             for other_agent_id in self.defendAgentIds:
@@ -619,8 +644,17 @@ class GlobalAgentsEnv:
                 if getDis(pos1, pos2) < self.communicate_radius:
                     self.defend_adj[self.defendId2index[agent_id]][self.defendId2index[other_agent_id]] = 1
                     self.defend_adj[self.defendId2index[other_agent_id]][self.defendId2index[agent_id]] = 1
-
         return self.defend_adj
+
+    def updateAttackAdj(self):
+        for agent_id in self.attackAgentIds:
+            pos1 = self.agentCurPositions[self.id2Index[agent_id]]
+            for other_agent_id in self.attackAgentIds:
+                pos2 = self.agentCurPositions[self.id2Index[other_agent_id]]
+                if getDis(pos1, pos2) < self.communicate_radius:
+                    self.attack_adj[self.defendId2index[agent_id]][self.defendId2index[other_agent_id]] = 1
+                    self.attack_adj[self.defendId2index[other_agent_id]][self.defendId2index[agent_id]] = 1
+        return self.attack_adj
 
     def getAttackStateReward(self):
         return self.state[0], self.reward[0]
@@ -753,7 +787,7 @@ class GlobalAgentsEnv:
         return velocity, angle
 
 
-class DefendAgentsEnv(gym.Env, ABC, object):
+class DefendAgentsEnv(gym.Env, ABC):
     def __init__(self, global_agents_env: GlobalAgentsEnv):
         super().__init__()
         self.global_agents_env = global_agents_env
@@ -778,7 +812,7 @@ class DefendAgentsEnv(gym.Env, ABC, object):
         return state, adj, reward, done
 
     def reset(self):
-        state, adj = self.global_agents_env.reset()
+        state, adj = self.global_agents_env.defendReset()
         return state, adj
 
     def render(self, mode='human'):
@@ -789,7 +823,8 @@ class DefendAgentsEnv(gym.Env, ABC, object):
 
 
 class AttackAgentsEnv(gym.Env, ABC):
-    def __int__(self, global_agents_env: GlobalAgentsEnv):
+    def __init__(self, global_agents_env: GlobalAgentsEnv):
+        super().__init__()
         self.global_agents_env = global_agents_env
         self.n_agent = self.global_agents_env.defend_num
         m_v = global_agents_env.max_velocity
@@ -812,7 +847,7 @@ class AttackAgentsEnv(gym.Env, ABC):
         return state, adj, reward, done
 
     def reset(self):
-        state, adj = self.global_agents_env.reset()
+        state, adj = self.global_agents_env.attackReset()
         return state, adj
 
     def render(self, mode='human'):
