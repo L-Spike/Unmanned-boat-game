@@ -557,6 +557,12 @@ class GlobalAgentsEnv:
                     angle = azimuthAngleWA(base_angle, angle)
                     cur_observe[1].append([other_agent_id, s, phi, velocity, angle])
 
+            cur_observe_sort = sorted(cur_observe[1], key=lambda x: (x[1], x[2]))[:self.reward_agent_num]
+            if len(cur_observe_sort) < self.reward_agent_num:
+                for i in range(len(cur_observe_sort), self.reward_agent_num):
+                    cur_observe_sort.append([0, 0, 0, 0, 0])
+            cur_observe[1] = cur_observe_sort
+
             for other_agent_id in self.defendAgentIds:
                 other_position = self.agentCurPositions[self.id2Index[other_agent_id]]
                 dis = getDis(cur_position, other_position)
@@ -566,6 +572,12 @@ class GlobalAgentsEnv:
                     velocity, angle = velocityConversionVerse(speed)
                     angle = azimuthAngleWA(base_angle, angle)
                     cur_observe[2].append([other_agent_id, s, phi, velocity, angle])
+
+            cur_observe_sort = sorted(cur_observe[2], key=lambda x: (x[1], x[2]))[:self.reward_agent_num]
+            if len(cur_observe_sort) < self.reward_agent_num:
+                for i in range(len(cur_observe_sort), self.reward_agent_num):
+                    cur_observe_sort.append([0, 0, 0, 0, 0])
+            cur_observe[2] = cur_observe_sort
 
             state[0].append(cur_observe)
 
@@ -826,7 +838,7 @@ class AttackAgentsEnv(gym.Env, ABC):
     def __init__(self, global_agents_env: GlobalAgentsEnv):
         super().__init__()
         self.global_agents_env = global_agents_env
-        self.n_agent = self.global_agents_env.defend_num
+        self.n_agent = self.global_agents_env.attack_num
         m_v = global_agents_env.max_velocity
         m_a = global_agents_env.max_turn_angle
         self.n_observation = 3 + 10 * self.global_agents_env.reward_agent_num
