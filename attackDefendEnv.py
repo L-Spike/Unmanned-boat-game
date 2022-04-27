@@ -652,8 +652,8 @@ class GlobalAgentsEnv:
             for other_agent_id in self.attackAgentIds:
                 pos2 = self.agentCurPositions[self.id2Index[other_agent_id]]
                 if getDis(pos1, pos2) < self.communicate_radius:
-                    self.attack_adj[self.defendId2index[agent_id]][self.defendId2index[other_agent_id]] = 1
-                    self.attack_adj[self.defendId2index[other_agent_id]][self.defendId2index[agent_id]] = 1
+                    self.attack_adj[self.attackId2Index[agent_id]][self.attackId2Index[other_agent_id]] = 1
+                    self.attack_adj[self.attackId2Index[other_agent_id]][self.attackId2Index[agent_id]] = 1
         return self.attack_adj
 
     def getAttackStateReward(self):
