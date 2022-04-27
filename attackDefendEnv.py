@@ -758,7 +758,7 @@ class GlobalAgentsEnv:
         state, reward = self.getAttackStateReward()
         done = self.getDone()
 
-        return state, reward, done, self.attack_adj
+        return state, self.attack_adj, reward, done,
 
     # 防守方行为接口
     def apply_defend_action2(self, defend_actions):
