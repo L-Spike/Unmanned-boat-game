@@ -444,6 +444,20 @@ class GlobalAgentsEnv:
             g_state.append(g_cur_state)
         return g_state
 
+    def transformAttackState(self, state):
+        g_state = []
+        for i in range(self.attack_num):
+            cur_state = state[i]
+            g_cur_state = []
+            g_cur_state.extend(cur_state[0])
+            for j in range(self.reward_agent_num):
+                g_cur_state.extend(cur_state[1][j])
+            for k in range(self.reward_agent_num):
+                g_cur_state.extend(cur_state[2][k])
+            g_cur_state.append(cur_state[-1])
+            g_state.append(g_cur_state)
+        return g_state
+
     # 以对象的方式设置防守和进攻策略
     def set_defend_stratedy(self, defend_stratedy: DefendStrategy):
         self.defend_stratedy: DefendStrategy = defend_stratedy
@@ -669,7 +683,8 @@ class GlobalAgentsEnv:
         return self.attack_adj
 
     def getAttackStateReward(self):
-        return self.state[0], self.reward[0]
+        state = self.transformAttackState(self.state[0])
+        return state, self.reward[0]
 
     def getDefendStateReward(self):
         state = self.transformDefendState(self.state[1])
