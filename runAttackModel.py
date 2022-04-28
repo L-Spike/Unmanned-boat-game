@@ -10,10 +10,9 @@ USE_CUDA = torch.cuda.is_available()
 description = 'run attack model'
 parser = argparse.ArgumentParser(description=description)
 parser.add_argument('path', type=str, help='the path of model')
-parser.add_argument('--name', type=str, default='normal', help='the name of config')
+parser.add_argument('--config', type=str, default='normal', help='the name of config')
 args = parser.parse_args()
 model_path = args.path
-# model_path = os.path.join('models', file_path)
 
 config_name = args.name
 if config_name == 'normal':

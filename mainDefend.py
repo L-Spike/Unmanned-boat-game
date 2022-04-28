@@ -17,17 +17,17 @@ from attackDefendEnv import *
 from config import epsilon
 
 USE_CUDA = torch.cuda.is_available()
-description = 'main defend'
+description = 'train defend model main function'
 parser = argparse.ArgumentParser(description=description)
-parser.add_argument('--name', type=int, default=0, help='the name of config file')
+parser.add_argument('--config', type=str, default="normal", help='the name of config file')
 args = parser.parse_args()
 config_name = args.name
 
-if config_name == 0:
+if config_name == 'normal':
     from config import *
-elif config_name == 1:
+elif config_name == '1':
     from configs.config1 import *
-elif config_name == 2:
+elif config_name == '2':
     from configs.config2 import *
 else:
     print(f'invalid config name:{config_name}!')
