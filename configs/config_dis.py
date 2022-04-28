@@ -1,6 +1,6 @@
 cuda_device = "1"
 
-use_done = True
+use_done = False
 use_angle = True  # only for attack
 
 factor = 4

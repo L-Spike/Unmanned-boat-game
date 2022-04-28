@@ -557,7 +557,10 @@ class GlobalAgentsEnv:
             cur_observe[3] = dis
 
             # calculate attack reward
-            attack_reward = self.attackRewardDisAngle(dis, cur_angle)
+            if use_angle:
+                attack_reward = self.attackRewardDisAngle(dis, cur_angle)
+            else:
+                attack_reward = self.attackRewardDis(dis)
             reward[0].append(attack_reward)
 
             for other_agent_id in self.attackAgentIds:
@@ -747,13 +750,14 @@ class GlobalAgentsEnv:
         state, reward = self.getDefendStateReward()
         done = self.getDone()
 
-        # todo
-        if done:
-            reward = [-defend_succeed_reward] * self.defend_num
-        elif self.cur_step == self.max_step:
-            reward = [defend_succeed_reward] * self.defend_num
+        if use_done:
+            # todo
+            if done:
+                reward = [-defend_succeed_reward] * self.defend_num
+            elif self.cur_step == self.max_step:
+                reward = [defend_succeed_reward] * self.defend_num
 
-        return state, self.defend_adj, reward, done,
+            return state, self.defend_adj, reward, done
 
     # 进攻方强化学习接口
     def apply_attack_action(self, attack_actions):
@@ -770,13 +774,14 @@ class GlobalAgentsEnv:
         state, reward = self.getAttackStateReward()
         done = self.getDone()
 
-        # todo
-        if done:
-            reward = [attack_succeed_reward] * self.attack_num
-        elif self.cur_step == max_step:
-            reward = [- attack_succeed_reward] * self.attack_num
+        if use_done:
+            # todo
+            if done:
+                reward = [attack_succeed_reward] * self.attack_num
+            elif self.cur_step == max_step:
+                reward = [- attack_succeed_reward] * self.attack_num
 
-        return state, self.attack_adj, reward, done,
+        return state, self.attack_adj, reward, done
 
     # 防守方行为接口
     def apply_defend_action2(self, defend_actions):

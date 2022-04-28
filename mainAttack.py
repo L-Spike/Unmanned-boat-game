@@ -20,16 +20,16 @@ from config import epsilon
 USE_CUDA = torch.cuda.is_available()
 description = 'main attack'
 parser = argparse.ArgumentParser(description=description)
-parser.add_argument('--name', type=int, default=0, help='the name of config file')
+parser.add_argument('--name', type=str, default='normal', help='the name of config')
 args = parser.parse_args()
-config_name = args.name
 
-if config_name == 0:
+config_name = args.name
+if config_name == 'normal':
     from config import *
-elif config_name == 1:
-    from configs.config1 import *
-elif config_name == 2:
-    from configs.config2 import *
+elif config_name == 'dis':
+    from configs.config_dis import *
+elif config_name == 'dis_done':
+    from configs.config_dis_done import *
 else:
     print(f'invalid config name:{config_name}!')
     exit(0)
@@ -155,11 +155,14 @@ while i_episode < n_episode:
         time_tuple = time.localtime(time.time())
 
         model_save_path = os.path.join(model_dirs,
-                                       "model_{}_{}_{}_{}_{}".format(time_tuple[1], time_tuple[2], time_tuple[3],
-                                                                     time_tuple[4], i_episode))
+                                       "model_{}_{}_{}_{}_{}_{}".format(config_name, time_tuple[1], time_tuple[2],
+                                                                        time_tuple[3],
+                                                                        time_tuple[4], i_episode))
         torch.save(model.state_dict(), model_save_path)
 
 time_tuple = time.localtime(time.time())
-with open(os.path.join(data_dirs, "evaluating_indicator_{}_{}_{}_{}".format(time_tuple[1], time_tuple[2], time_tuple[3],
-                                                                            time_tuple[4]) + ".pkl"), "wb") as f:
+with open(os.path.join(data_dirs,
+                       "evaluating_indicator_{}_{}_{}_{}_{}".format(config_name, time_tuple[1], time_tuple[2],
+                                                                    time_tuple[3],
+                                                                    time_tuple[4]) + ".pkl"), "wb") as f:
     pickle.dump(evaluating_indicator, f, pickle.HIGHEST_PROTOCOL)
