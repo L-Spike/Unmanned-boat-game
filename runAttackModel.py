@@ -81,10 +81,8 @@ while i_episode < run_n_episode:
         score += sum(reward)
         time.sleep(time_to_render)
     if cur_result == 0:
-        print("so_done")
-        print(action)
         p.addUserDebugText(
-            text="Fail!",
+            text="Fail！",
             textPosition=[0, 0, 3],
             textColorRGB=[255/255, 0, 0],
             textSize=3,

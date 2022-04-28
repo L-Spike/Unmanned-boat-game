@@ -44,6 +44,7 @@ while i_episode < run_n_episode:
     i_episode += 1
     steps = 0
     score = 0
+    cur_result = 0
     obs, adj = env.reset()
     while steps < max_step:
         steps += 1
@@ -60,17 +61,32 @@ while i_episode < run_n_episode:
         if terminated:
             print("so_done")
             print(action)
+            p.addUserDebugText(
+                text="Fail!",
+                textPosition=[0, 0, 3],
+                textColorRGB=[255/255, 0, 0],  # 5；G:39；B:175
+                textSize=3,
+                lifeTime=1
+            )
+            cur_result = 1
+            time.sleep(1)
             break
         print(steps)
-        # for ac in action:
-        #     if 15 <= ac <=19:
-        #         print("iop")
-        #         print(action)
-        #         break
         obs = next_obs
         adj = next_adj
         score += sum(reward)
         time.sleep(time_to_render)
+
+    if cur_result == 0:
+        p.addUserDebugText(
+            text="Succeed！",
+            textPosition=[0, 0, 3],
+            textColorRGB=[5 / 255, 39 / 255, 175 / 255],
+            textSize=3,
+            lifeTime=1
+        )
+        cur_result = 1
+        time.sleep(1)
 
     print(f"i_episode: {i_episode}")
     print(f"score:{score}")
