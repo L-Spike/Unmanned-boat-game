@@ -289,7 +289,8 @@ def drawCircle(radius, color, theta_delta):
 class GlobalAgentsEnv:
     def __init__(self, defend_stratedy, attack_strategy,
                  render: bool = False):
-
+        self.cur_step = 0
+        self.max_step = max_step
         self.attack_reward_factor = attack_reward_factor
         self.turn_radius = turn_radius
         self.factor = factor
@@ -352,10 +353,10 @@ class GlobalAgentsEnv:
         #                              cameraTargetPosition=[-5, 5, 0.3])
 
         # 禁止圈
-        drawCircle(self.forbidden_radius, [1, 1, 1], theta_delta=30 / 180 * math.pi)
+        drawCircle(self.forbidden_radius, [249 / 255, 205 / 255, 173 / 255], theta_delta=30 / 180 * math.pi)
 
         # 结束圈
-        drawCircle(self.done_dis, [1, 1, 1], theta_delta=40 / 180 * math.pi)
+        drawCircle(self.done_dis, [130 / 255, 32 / 255, 43 / 255], theta_delta=40 / 180 * math.pi)
 
         # 设置agent的初始朝向
         agentStartOrientation = p.getQuaternionFromEuler([0, 0, 0])
@@ -395,6 +396,7 @@ class GlobalAgentsEnv:
 
     def reset(self):
 
+        self.cur_step = 0
         # 设置agent的初始朝向
         agentStartOrientation = p.getQuaternionFromEuler([0, 0, 0])
 
@@ -525,7 +527,7 @@ class GlobalAgentsEnv:
         angle = angle * math.pi / 180
         change_item = self.turn_radius * abs(angle - math.sin(angle))
         return -(dis + change_item) * self.attack_reward_factor
-        
+
     def attackRewardDis(self, dis):
         return -dis * self.attack_reward_factor
 
@@ -654,6 +656,7 @@ class GlobalAgentsEnv:
             state[1].append(cur_observe)
 
         # 进入极端距离的负奖励
+        # todo
         ex_threat_r = self.getForbiddenReward()
         for i in range(self.defend_num):
             reward[1][i] += ex_threat_r
@@ -732,6 +735,7 @@ class GlobalAgentsEnv:
         # defend_action n个防守方的油门舵角
         # [[油门，舵角],[]]
         # 对每个智能体的速度进行改变
+        self.cur_step += 1
         a_state, a_reward = self.getAttackStateReward()
         attack_actions = self.attack_strategy.generate_actions(a_state)
         self.apply_attack_action2(attack_actions)
@@ -742,11 +746,19 @@ class GlobalAgentsEnv:
 
         state, reward = self.getDefendStateReward()
         done = self.getDone()
-        # state, adj, reward, done
+
+        # todo
+        if done:
+            reward = [-defend_succeed_reward] * self.defend_num
+        elif self.cur_step == self.max_step:
+            reward = [defend_succeed_reward] * self.defend_num
+
         return state, self.defend_adj, reward, done,
 
     # 进攻方强化学习接口
     def apply_attack_action(self, attack_actions):
+
+        self.cur_step += 1
         d_state, d_reward = self.getDefendStateReward()
         defend_actions = self.defend_stratedy.generate_actions(d_state)
         self.apply_defend_action2(defend_actions)
@@ -757,6 +769,12 @@ class GlobalAgentsEnv:
 
         state, reward = self.getAttackStateReward()
         done = self.getDone()
+
+        # todo
+        if done:
+            reward = [attack_succeed_reward] * self.attack_num
+        elif self.cur_step == max_step:
+            reward = [- attack_succeed_reward] * self.attack_num
 
         return state, self.attack_adj, reward, done,
 

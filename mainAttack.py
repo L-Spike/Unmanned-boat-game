@@ -34,7 +34,6 @@ else:
     print(f'invalid config name:{config_name}!')
     exit(0)
 
-
 USE_CUDA = torch.cuda.is_available()
 os.environ['CUDA_VISIBLE_DEVICES'] = cuda_device
 
@@ -62,6 +61,13 @@ cumulative_rewards = []
 losses = []
 evaluating_indicator = {"Cumulative reward": cumulative_rewards, "losses": losses}
 
+model_dirs = "attack_models"
+if not os.path.exists(model_dirs):
+    os.makedirs(model_dirs)
+
+data_dirs = "attack_train_data"
+if not os.path.exists(data_dirs):
+    os.makedirs(data_dirs)
 
 while i_episode < n_episode:
 
@@ -144,12 +150,16 @@ while i_episode < n_episode:
 
     losses.append(np.mean(loss_rollouts))
 
-    if i_episode%1000 == 0:
+    if i_episode % 1000 == 0:
         # 存储网络参数， 完成预测
         time_tuple = time.localtime(time.time())
-        model_save_path = os.path.join("attack_models", "./model_{}_{}_{}_{}_{}".format(time_tuple[1], time_tuple[2], time_tuple[3], time_tuple[4], i_episode))
+
+        model_save_path = os.path.join(model_dirs,
+                                       "model_{}_{}_{}_{}_{}".format(time_tuple[1], time_tuple[2], time_tuple[3],
+                                                                     time_tuple[4], i_episode))
         torch.save(model.state_dict(), model_save_path)
 
 time_tuple = time.localtime(time.time())
-with open(os.path.join("attack_train_data", "evaluating_indicator_{}_{}_{}_{}".format(time_tuple[1], time_tuple[2], time_tuple[3], time_tuple[4])+".pkl"), "wb") as f:
+with open(os.path.join(data_dirs, "evaluating_indicator_{}_{}_{}_{}".format(time_tuple[1], time_tuple[2], time_tuple[3],
+                                                                            time_tuple[4]) + ".pkl"), "wb") as f:
     pickle.dump(evaluating_indicator, f, pickle.HIGHEST_PROTOCOL)
