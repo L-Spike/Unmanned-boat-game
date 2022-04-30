@@ -139,6 +139,7 @@ class SimpleAttackStrategy(AttackStrategy):
     # 依据局部观测到的状态产生简单的进攻行为
     # 具体而言是朝者目标直线运动，直到出现碰撞行为，然后选择朝左或者右进行规避，当不出现碰撞行为时再朝着目标进行运动
     def generate_actions(self, states):
+        states = states[0]
         actions = []
         # （友军设置碰撞范围小）（敌军设置碰撞范围大）
         #  简单将友军设置成为均匀分散的初始位置
@@ -740,7 +741,7 @@ class GlobalAgentsEnv:
         # 对每个智能体的速度进行改变
         self.cur_step += 1
         a_state, a_reward = self.getAttackStateReward()
-        attack_actions = self.attack_strategy.generate_actions(a_state)
+        attack_actions = self.attack_strategy.generate_actions([a_state, self.attack_adj])
         self.apply_attack_action2(attack_actions)
         self.apply_defend_action2(defend_actions)
         p.stepSimulation()
