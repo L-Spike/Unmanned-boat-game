@@ -273,6 +273,7 @@ class DRLAttackStrategy(AttackStrategy):
         obs, adj = states
         action = []
         n_adj = adj + np.eye(self.n_ant)
+        logging.debug(f'obs:{obs} \n n_adj:{n_adj}')
         q, a_w = self.model(torch.Tensor(np.array([obs])), torch.Tensor(np.array([n_adj])))
         q = q[0]
         for i in range(self.n_ant):
