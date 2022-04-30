@@ -274,6 +274,7 @@ class DRLAttackStrategy(AttackStrategy):
         action = []
         n_adj = adj + np.eye(self.n_ant)
         logging.debug(f'obs:{obs} \n n_adj:{n_adj}')
+        obs = transformState(obs)
         q, a_w = self.model(torch.Tensor(np.array([obs])), torch.Tensor(np.array([n_adj])))
         q = q[0]
         for i in range(self.n_ant):
@@ -318,6 +319,20 @@ def drawCircle(radius, color, theta_delta):
             lineColorRGB=color,
             lineWidth=3
         )
+
+
+def transformState(state):
+    g_state = []
+    for cur_state in state:
+        g_cur_state = []
+        g_cur_state.extend(cur_state[0])
+        for j in range(reward_agent_num):
+            g_cur_state.extend(cur_state[1][j])
+        for k in range(reward_agent_num):
+            g_cur_state.extend(cur_state[2][k])
+        g_cur_state.append(cur_state[-1])
+        g_state.append(g_cur_state)
+    return g_state
 
 
 class GlobalAgentsEnv:
@@ -444,21 +459,8 @@ class GlobalAgentsEnv:
         self.reset()
         self.updateStateReward()
         d_state, _ = self.getDefendStateReward()
-        d_state = self.transformState(d_state)
+        d_state = transformState(d_state)
         return d_state, self.defend_adj
-
-    def transformState(self, state):
-        g_state = []
-        for cur_state in state:
-            g_cur_state = []
-            g_cur_state.extend(cur_state[0])
-            for j in range(reward_agent_num):
-                g_cur_state.extend(cur_state[1][j])
-            for k in range(reward_agent_num):
-                g_cur_state.extend(cur_state[2][k])
-            g_cur_state.append(cur_state[-1])
-            g_state.append(g_cur_state)
-        return g_state
 
     # 以对象的方式设置防守和进攻策略
     def set_defend_stratedy(self, defend_stratedy: DefendStrategy):
@@ -750,7 +752,7 @@ class GlobalAgentsEnv:
         self.updateStateReward()
 
         state, reward = self.getDefendStateReward()
-        state = self.transformState(state)
+        state = transformState(state)
         done = self.getDone()
 
         if use_done:
@@ -775,7 +777,7 @@ class GlobalAgentsEnv:
         self.updateStateReward()
 
         state, reward = self.getAttackStateReward()
-        state = self.transformState(state)
+        state = transformState(state)
         done = self.getDone()
 
         if use_done:
