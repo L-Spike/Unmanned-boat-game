@@ -9,8 +9,17 @@ import pybullet as p
 import time
 import pybullet_data
 import gym
+import torch
 from gym import spaces
 
+import logging
+
+from model import DGN
+
+level = logging.DEBUG  # INFO 、WARNING、ERROR、CRITICAL
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(filename)s - %(funcName)s() - %(message)s',
+    level=logging.DEBUG)
 from config import *
 
 
@@ -148,7 +157,7 @@ class SimpleAttackStrategy(AttackStrategy):
             min_d = -1
             min_delta = -1
             min_threat_agent_info = None
-
+            logging.debug(f'agent_info: {agent_info}')
             velocity1 = agent_info[0][0]
             angle1 = agent_info[0][1]
             for attack_agent_info in agent_info[2]:
@@ -248,6 +257,29 @@ class SimpleAttackStrategy(AttackStrategy):
         return threat_item, d, target_angle_delta_with_symbol
 
 
+class DRLAttackStrategy(AttackStrategy):
+    def __init__(self, model_path):
+        # super(DRLAttackStrategy, self).__init__()
+        super().__init__()
+        self.n_ant = attack_num
+        self.observation_space = 3 + 10 * reward_agent_num
+        self.n_action = 25
+        self.model = DGN(attack_num, self.observation_space, hidden_dim, self.n_action)
+        self.model.load_state_dict(torch.load(model_path, map_location="cpu"))
+        self.n_agent = attack_num
+
+    def generate_actions(self, states):
+        obs, adj = states
+        action = []
+        n_adj = adj + np.eye(self.n_ant)
+        q, a_w = self.model(torch.Tensor(np.array([obs])), torch.Tensor(np.array([n_adj])))
+        q = q[0]
+        for i in range(self.n_ant):
+            a = q[i].argmax().item()
+            action.append(a)
+        return action
+
+
 class RandomDefendStrategy(DefendStrategy):
     def __init__(self):
         super().__init__()
@@ -290,32 +322,8 @@ class GlobalAgentsEnv:
     def __init__(self, defend_stratedy, attack_strategy,
                  render: bool = False):
         self.cur_step = 0
-        self.max_step = max_step
-        self.attack_reward_factor = attack_reward_factor
-        self.turn_radius = turn_radius
-        self.factor = factor
-        self.capture_reward = capture_reward
-        self.forbidden_reward = forbidden_reward
-        self.not_find_reward = not_find_reward
-        self.done_dis = done_dis
-        self.attack_num = attack_num
-        self.defend_num = defend_num
-        self.attack_radius = attack_radius
-        self.defend_radius = defend_radius
-        self.forbidden_radius = forbidden_radius
-        self.not_to_catch_reward = not_to_catch_reward
-        self.threat_angle_delta = threat_angle_delta
-        self.threat_angle = threat_angle
-        self.threat_dis = defend_threat_dis
-        self.capture_dis = capture_dis
-        self.reward_agent_num = reward_agent_num
-        self.target_position = target_position
-        self.max_velocity = max_velocity
-        self.max_turn_angle = max_turn_angle
-        self.communicate_radius = communicate_radius
-        self.observe_radius = observe_radius
-        self.action_space = spaces.Discrete(5)
-        self.observation_space = spaces.Discrete(2)
+        # self.action_space = spaces.Discrete(5)
+        # self.observation_space = spaces.Discrete(2)
 
         self.defend_stratedy: DefendStrategy = defend_stratedy
         self.attack_strategy: AttackStrategy = attack_strategy
@@ -327,8 +335,8 @@ class GlobalAgentsEnv:
         self.defendAgentIds = []
         self.attackAgentIds = []
         self.id2Index = {}
-        self.agentCurPositions = [0] * (self.attack_num + self.defend_num)
-        self.agentCurVelocities = [0] * (self.attack_num + self.defend_num)
+        self.agentCurPositions = [0] * (attack_num + defend_num)
+        self.agentCurVelocities = [0] * (attack_num + defend_num)
         self.defendId2index = {}
         self.attackId2Index = {}
         self.init_agent()
@@ -336,8 +344,8 @@ class GlobalAgentsEnv:
         self.defend_total_reward = 0
         self.state = None
         self.reward = None
-        self.attack_adj = np.zeros((self.attack_num, self.attack_num))
-        self.defend_adj = np.zeros((self.defend_num, self.defend_num))
+        self.attack_adj = np.zeros((attack_num, attack_num))
+        self.defend_adj = np.zeros((defend_num, defend_num))
 
         #         pKey = ord('p')
         #         key = p.getKeyboardEvents()
@@ -346,6 +354,7 @@ class GlobalAgentsEnv:
     def init_agent(self):
         # 将地面设置为光滑平面
         planeId = p.loadURDF("plane.urdf")
+        logging.debug(f'planeID:{planeId}')
         p.changeDynamics(planeId, 0, lateralFriction=0, spinningFriction=0, rollingFriction=0)
 
         # # 相机设置
@@ -353,22 +362,22 @@ class GlobalAgentsEnv:
         #                              cameraTargetPosition=[-5, 5, 0.3])
 
         # 禁止圈
-        drawCircle(self.forbidden_radius, [249 / 255, 205 / 255, 173 / 255], theta_delta=30 / 180 * math.pi)
+        drawCircle(forbidden_radius, [249 / 255, 205 / 255, 173 / 255], theta_delta=30 / 180 * math.pi)
 
         # 结束圈
-        drawCircle(self.done_dis, [130 / 255, 32 / 255, 43 / 255], theta_delta=40 / 180 * math.pi)
+        drawCircle(done_dis, [130 / 255, 32 / 255, 43 / 255], theta_delta=40 / 180 * math.pi)
 
         # 设置agent的初始朝向
         agentStartOrientation = p.getQuaternionFromEuler([0, 0, 0])
 
         # 加载守方智能体初始位置
         cur_angle = 0
-        theta = math.pi * 2 / self.defend_num
+        theta = math.pi * 2 / defend_num
         index = 0
         index_ = 0
-        for i in range(self.defend_num):
-            x = self.defend_radius * math.sin(cur_angle)
-            y = self.defend_radius * math.cos(cur_angle)
+        for i in range(defend_num):
+            x = defend_radius * math.sin(cur_angle)
+            y = defend_radius * math.cos(cur_angle)
             defendAgentStartPos = [x, y, 0]
             agentId = p.loadURDF("defendAgent.urdf", defendAgentStartPos, agentStartOrientation)
             self.defendAgentIds.append(agentId)
@@ -380,11 +389,11 @@ class GlobalAgentsEnv:
 
         # 加载攻方智能体初始位置
         cur_angle = random.randint(0, 360)
-        theta = math.pi * 2 / self.attack_num
+        theta = math.pi * 2 / attack_num
         index = 0
-        for i in range(self.attack_num):
-            x = self.attack_radius * math.sin(cur_angle)
-            y = self.attack_radius * math.cos(cur_angle)
+        for i in range(attack_num):
+            x = attack_radius * math.sin(cur_angle)
+            y = attack_radius * math.cos(cur_angle)
             attackAgentStartPos = [x, y, 0]
             agentId = p.loadURDF("attackAgent.urdf", attackAgentStartPos, agentStartOrientation)
             self.attackAgentIds.append(agentId)
@@ -394,6 +403,9 @@ class GlobalAgentsEnv:
             index_ += 1
             cur_angle += theta
 
+        logging.debug(f'attack ids:{self.attackAgentIds}')
+        logging.debug(f'defend ids: {self.defendAgentIds}')
+
     def reset(self):
 
         self.cur_step = 0
@@ -402,20 +414,20 @@ class GlobalAgentsEnv:
 
         # 加载守方智能体初始位置
         cur_angle = 0
-        theta = math.pi * 2 / self.defend_num
+        theta = math.pi * 2 / defend_num
         for agentId in self.defendAgentIds:
-            x = self.defend_radius * math.sin(cur_angle)
-            y = self.defend_radius * math.cos(cur_angle)
+            x = defend_radius * math.sin(cur_angle)
+            y = defend_radius * math.cos(cur_angle)
             defendAgentStartPos = [x, y, 0]
             p.resetBasePositionAndOrientation(agentId, defendAgentStartPos, agentStartOrientation)
             cur_angle += theta
 
         # 加载攻方智能体初始位置
         cur_angle = random.randint(0, 360)
-        theta = math.pi * 2 / self.attack_num
+        theta = math.pi * 2 / attack_num
         for agentId in self.attackAgentIds:
-            x = self.attack_radius * math.sin(cur_angle)
-            y = self.attack_radius * math.cos(cur_angle)
+            x = attack_radius * math.sin(cur_angle)
+            y = attack_radius * math.cos(cur_angle)
             attackAgentStartPos = [x, y, 0]
             p.resetBasePositionAndOrientation(agentId, attackAgentStartPos, agentStartOrientation)
             cur_angle += theta
@@ -430,31 +442,17 @@ class GlobalAgentsEnv:
         self.reset()
         self.updateStateReward()
         d_state, _ = self.getDefendStateReward()
+        d_state = self.transformState(d_state)
         return d_state, self.defend_adj
 
-    def transformDefendState(self, state):
+    def transformState(self, state):
         g_state = []
-        for i in range(self.defend_num):
-            cur_state = state[i]
+        for cur_state in state:
             g_cur_state = []
             g_cur_state.extend(cur_state[0])
-            for j in range(self.reward_agent_num):
+            for j in range(reward_agent_num):
                 g_cur_state.extend(cur_state[1][j])
-            for k in range(self.reward_agent_num):
-                g_cur_state.extend(cur_state[2][k])
-            g_cur_state.append(cur_state[-1])
-            g_state.append(g_cur_state)
-        return g_state
-
-    def transformAttackState(self, state):
-        g_state = []
-        for i in range(self.attack_num):
-            cur_state = state[i]
-            g_cur_state = []
-            g_cur_state.extend(cur_state[0])
-            for j in range(self.reward_agent_num):
-                g_cur_state.extend(cur_state[1][j])
-            for k in range(self.reward_agent_num):
+            for k in range(reward_agent_num):
                 g_cur_state.extend(cur_state[2][k])
             g_cur_state.append(cur_state[-1])
             g_state.append(g_cur_state)
@@ -482,7 +480,7 @@ class GlobalAgentsEnv:
         sin_value = math.sin(theta) * velocity2 / (velocity1 + 0.01)
 
         if sin_value > 1:
-            return self.not_to_catch_reward
+            return not_to_catch_reward
         alpha = math.atan(sin_value)
         # if alpha < theta:(只有一个解)
         delta = math.pi - alpha - theta
@@ -492,17 +490,17 @@ class GlobalAgentsEnv:
         target_angle = phi + alpha * symbol
         target_angle_delta = relativeAngle(target_angle, angle1)
 
-        reward_item = d * target_angle_delta * self.factor
-        if s > self.capture_dis:
+        reward_item = d * target_angle_delta * factor
+        if s > capture_dis:
             return -reward_item
         else:
-            return self.capture_reward
+            return capture_reward
 
     # 攻方reward
     def attackReward(self, s, angle):
-        if s < self.done_dis:
+        if s < done_dis:
             return 10
-        if angle < self.done_dis:
+        if angle < done_dis:
             return 5
 
     def updateCurPositionsVelocities(self):
@@ -525,11 +523,11 @@ class GlobalAgentsEnv:
         # phi - sin(phi)
         angle = 360 - angle if angle > 180 else angle
         angle = angle * math.pi / 180
-        change_item = self.turn_radius * abs(angle - math.sin(angle))
-        return -(dis + change_item) * self.attack_reward_factor
+        change_item = turn_radius * abs(angle - math.sin(angle))
+        return -(dis + change_item) * attack_reward_factor
 
     def attackRewardDis(self, dis):
-        return -dis * self.attack_reward_factor
+        return -dis * attack_reward_factor
 
     def updateStateReward(self):
         state = [[], []]
@@ -546,14 +544,14 @@ class GlobalAgentsEnv:
             cur_position = self.agentCurPositions[self.id2Index[cur_agent_id]]
             cur_speed = self.agentCurVelocities[self.id2Index[cur_agent_id]]
             cur_velocity, cur_angle = velocityConversionVerse(cur_speed)
-            base_angle = azimuthAngleWP(cur_position, self.target_position)
+            base_angle = azimuthAngleWP(cur_position, target_position)
             cur_angle = azimuthAngleWA(base_angle, cur_angle)
 
             # [[cur_velocity, cur_angle], [[ther_agent_id, s, phi,
             # velocity, angle]...], [[ther_agent_id, s, phi, velocity, angle],...], dis]
 
             cur_observe = [[cur_velocity, cur_angle], [], [], -1]
-            dis = getDis(self.target_position, cur_position)
+            dis = getDis(target_position, cur_position)
             cur_observe[3] = dis
 
             # calculate attack reward
@@ -569,32 +567,32 @@ class GlobalAgentsEnv:
                 other_position = self.agentCurPositions[self.id2Index[cur_agent_id]]
                 dis = getDis(cur_position, other_position)
 
-                if dis < self.communicate_radius:
-                    s, phi = transferRelativePosition(cur_position, other_position, self.target_position)
+                if dis < communicate_radius:
+                    s, phi = transferRelativePosition(cur_position, other_position, target_position)
                     speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
                     velocity, angle = velocityConversionVerse(speed)
                     angle = azimuthAngleWA(base_angle, angle)
                     cur_observe[1].append([other_agent_id, s, phi, velocity, angle])
 
-            cur_observe_sort = sorted(cur_observe[1], key=lambda x: (x[1], x[2]))[:self.reward_agent_num]
-            if len(cur_observe_sort) < self.reward_agent_num:
-                for i in range(len(cur_observe_sort), self.reward_agent_num):
+            cur_observe_sort = sorted(cur_observe[1], key=lambda x: (x[1], x[2]))[:reward_agent_num]
+            if len(cur_observe_sort) < reward_agent_num:
+                for i in range(len(cur_observe_sort), reward_agent_num):
                     cur_observe_sort.append([0, 0, 0, 0, 0])
             cur_observe[1] = cur_observe_sort
 
             for other_agent_id in self.defendAgentIds:
                 other_position = self.agentCurPositions[self.id2Index[other_agent_id]]
                 dis = getDis(cur_position, other_position)
-                if dis < self.observe_radius:
-                    s, phi = transferRelativePosition(cur_position, other_position, self.target_position)
+                if dis < observe_radius:
+                    s, phi = transferRelativePosition(cur_position, other_position, target_position)
                     speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
                     velocity, angle = velocityConversionVerse(speed)
                     angle = azimuthAngleWA(base_angle, angle)
                     cur_observe[2].append([other_agent_id, s, phi, velocity, angle])
 
-            cur_observe_sort = sorted(cur_observe[2], key=lambda x: (x[1], x[2]))[:self.reward_agent_num]
-            if len(cur_observe_sort) < self.reward_agent_num:
-                for i in range(len(cur_observe_sort), self.reward_agent_num):
+            cur_observe_sort = sorted(cur_observe[2], key=lambda x: (x[1], x[2]))[:reward_agent_num]
+            if len(cur_observe_sort) < reward_agent_num:
+                for i in range(len(cur_observe_sort), reward_agent_num):
                     cur_observe_sort.append([0, 0, 0, 0, 0])
             cur_observe[2] = cur_observe_sort
 
@@ -605,44 +603,44 @@ class GlobalAgentsEnv:
             cur_position = self.agentCurPositions[self.id2Index[cur_agent_id]]
             cur_speed = self.agentCurVelocities[self.id2Index[cur_agent_id]]
             cur_velocity, cur_angle = velocityConversionVerse(cur_speed)
-            base_angle = azimuthAngleWP(cur_position, self.target_position)
+            base_angle = azimuthAngleWP(cur_position, target_position)
             cur_angle = azimuthAngleWA(base_angle, cur_angle)
             cur_observe = [[cur_velocity, cur_angle], [], [], -1]
-            cur_observe[3] = getDis(self.target_position, cur_position)
+            cur_observe[3] = getDis(target_position, cur_position)
 
             for other_agent_id in self.defendAgentIds:
                 if cur_agent_id == other_agent_id:
                     continue
                 other_position = self.agentCurPositions[self.id2Index[other_agent_id]]
                 dis = getDis(cur_position, other_position)
-                if dis < self.communicate_radius:
-                    s, phi = transferRelativePosition(cur_position, other_position, self.target_position)
+                if dis < communicate_radius:
+                    s, phi = transferRelativePosition(cur_position, other_position, target_position)
                     speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
                     velocity, angle = velocityConversionVerse(speed)
                     angle = azimuthAngleWA(base_angle, angle)
                     cur_observe[1].append([other_agent_id, s, phi, velocity, angle])
 
-            cur_observe_sort = sorted(cur_observe[1], key=lambda x: x[1])[:self.reward_agent_num]
+            cur_observe_sort = sorted(cur_observe[1], key=lambda x: x[1])[:reward_agent_num]
             cur_observe_sort_ = sorted(cur_observe_sort, key=lambda x: x[2])
-            if len(cur_observe_sort) < self.reward_agent_num:
-                for i in range(len(cur_observe_sort), self.reward_agent_num):
+            if len(cur_observe_sort) < reward_agent_num:
+                for i in range(len(cur_observe_sort), reward_agent_num):
                     cur_observe_sort.append([0, 0, 0, 0, 0])
             cur_observe[1] = cur_observe_sort_
 
             for other_agent_id in self.attackAgentIds:
                 other_position = self.agentCurPositions[self.id2Index[other_agent_id]]
                 dis = getDis(cur_position, other_position)
-                if dis < self.observe_radius:
-                    s, phi = transferRelativePosition(cur_position, other_position, self.target_position)
+                if dis < observe_radius:
+                    s, phi = transferRelativePosition(cur_position, other_position, target_position)
                     speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
                     velocity, angle = velocityConversionVerse(speed)
                     angle = azimuthAngleWA(base_angle, angle)
                     cur_observe[2].append([other_agent_id, s, phi, velocity, angle])
 
             # todo 排序依据
-            cur_observe_sort = sorted(cur_observe[2], key=lambda x: (x[1], x[2]))[:self.reward_agent_num]
-            if len(cur_observe_sort) < self.reward_agent_num:
-                for i in range(len(cur_observe_sort), self.reward_agent_num):
+            cur_observe_sort = sorted(cur_observe[2], key=lambda x: (x[1], x[2]))[:reward_agent_num]
+            if len(cur_observe_sort) < reward_agent_num:
+                for i in range(len(cur_observe_sort), reward_agent_num):
                     cur_observe_sort.append([0, 0, 0, 0, 0])
             cur_observe[2] = cur_observe_sort
 
@@ -654,14 +652,14 @@ class GlobalAgentsEnv:
                                                   cur_velocity, cur_observe_[3])
             else:
                 # 处理lazy？  未发现敌方
-                defend_reward = self.not_find_reward
+                defend_reward = not_find_reward
             reward[1].append(defend_reward)
             state[1].append(cur_observe)
 
         # 进入极端距离的负奖励
         # todo
         ex_threat_r = self.getForbiddenReward()
-        for i in range(self.defend_num):
+        for i in range(defend_num):
             reward[1][i] += ex_threat_r
 
         # 修改reward
@@ -673,7 +671,7 @@ class GlobalAgentsEnv:
             pos1 = self.agentCurPositions[self.id2Index[agent_id]]
             for other_agent_id in self.defendAgentIds:
                 pos2 = self.agentCurPositions[self.id2Index[other_agent_id]]
-                if getDis(pos1, pos2) < self.communicate_radius:
+                if getDis(pos1, pos2) < communicate_radius:
                     self.defend_adj[self.defendId2index[agent_id]][self.defendId2index[other_agent_id]] = 1
                     self.defend_adj[self.defendId2index[other_agent_id]][self.defendId2index[agent_id]] = 1
         return self.defend_adj
@@ -683,31 +681,33 @@ class GlobalAgentsEnv:
             pos1 = self.agentCurPositions[self.id2Index[agent_id]]
             for other_agent_id in self.attackAgentIds:
                 pos2 = self.agentCurPositions[self.id2Index[other_agent_id]]
-                if getDis(pos1, pos2) < self.communicate_radius:
+                if getDis(pos1, pos2) < communicate_radius:
                     self.attack_adj[self.attackId2Index[agent_id]][self.attackId2Index[other_agent_id]] = 1
                     self.attack_adj[self.attackId2Index[other_agent_id]][self.attackId2Index[agent_id]] = 1
         return self.attack_adj
 
     def getAttackStateReward(self):
-        state = self.transformAttackState(self.state[0])
+        # state = self.transformAttackState(self.state[0])
+        state = self.state[0]
         return state, self.reward[0]
 
     def getDefendStateReward(self):
-        state = self.transformDefendState(self.state[1])
+        # state = self.transformDefendState(self.state[1])
+        state = self.state[1]
         return state, self.reward[1]
 
     def getDone(self):
         for agent_id in self.attackAgentIds:
             a_position = self.agentCurPositions[self.id2Index[agent_id]]
-            if getDis(a_position, self.target_position) < self.done_dis:
+            if getDis(a_position, target_position) < done_dis:
                 return True
         return False
 
     def getForbiddenReward(self):
         for agent_id in self.attackAgentIds:
             a_position = self.agentCurPositions[self.id2Index[agent_id]]
-            if getDis(a_position, self.target_position) < self.forbidden_radius:
-                return self.forbidden_reward
+            if getDis(a_position, target_position) < forbidden_radius:
+                return forbidden_reward
         return 0
 
     def getInfo(self):
@@ -748,14 +748,15 @@ class GlobalAgentsEnv:
         self.updateStateReward()
 
         state, reward = self.getDefendStateReward()
+        state = self.transformState(state)
         done = self.getDone()
 
         if use_done:
             # todo
             if done:
-                reward = [-defend_succeed_reward] * self.defend_num
-            elif self.cur_step == self.max_step:
-                reward = [defend_succeed_reward] * self.defend_num
+                reward = [-defend_succeed_reward] * defend_num
+            elif self.cur_step == max_step:
+                reward = [defend_succeed_reward] * defend_num
 
             return state, self.defend_adj, reward, done
 
@@ -772,14 +773,15 @@ class GlobalAgentsEnv:
         self.updateStateReward()
 
         state, reward = self.getAttackStateReward()
+        state = self.transformState(state)
         done = self.getDone()
 
         if use_done:
             # todo
             if done:
-                reward = [attack_succeed_reward] * self.attack_num
+                reward = [attack_succeed_reward] * attack_num
             elif self.cur_step == max_step:
-                reward = [- attack_succeed_reward] * self.attack_num
+                reward = [- attack_succeed_reward] * attack_num
 
         return state, self.attack_adj, reward, done
 
@@ -831,7 +833,7 @@ class GlobalAgentsEnv:
     # 速度改变机制
     def changeSpeed(self, velocity, angle, oil, rudder):
         velocity = velocity + oil
-        velocity = min(self.max_velocity, velocity)
+        velocity = min(max_velocity, velocity)
         velocity = max(0, velocity)
         angle = (angle + rudder) % 360
         return velocity, angle
@@ -841,10 +843,10 @@ class DefendAgentsEnv(gym.Env, ABC):
     def __init__(self, global_agents_env: GlobalAgentsEnv):
         super().__init__()
         self.global_agents_env = global_agents_env
-        self.n_agent = self.global_agents_env.defend_num
-        m_v = global_agents_env.max_velocity
-        m_a = global_agents_env.max_turn_angle
-        self.n_observation = 3 + 10 * self.global_agents_env.reward_agent_num
+        self.n_agent = defend_num
+        m_v = max_velocity
+        m_a = max_turn_angle
+        self.n_observation = 3 + 10 * reward_agent_num
         self.n_action = 25
         self.actionIndex2OilRudder = [[0, 0], [0, 0.2 * m_a], [0, -0.2 * m_a], [0, m_a], [0, -m_a],
                                       [0.2 * m_v, 0], [0.2 * m_v, 0.2 * m_a], [0.2 * m_v, -0.2 * m_a], [0.2 * m_v, m_a],
@@ -876,10 +878,10 @@ class AttackAgentsEnv(gym.Env, ABC):
     def __init__(self, global_agents_env: GlobalAgentsEnv):
         super().__init__()
         self.global_agents_env = global_agents_env
-        self.n_agent = self.global_agents_env.attack_num
-        m_v = global_agents_env.max_velocity
-        m_a = global_agents_env.max_turn_angle
-        self.n_observation = 3 + 10 * self.global_agents_env.reward_agent_num
+        self.n_agent = attack_num
+        m_v = max_velocity
+        m_a = max_turn_angle
+        self.n_observation = 3 + 10 * reward_agent_num
         self.n_action = 25
         self.actionIndex2OilRudder = [[0, 0], [0, 0.2 * m_a], [0, -0.2 * m_a], [0, m_a], [0, -m_a],
                                       [0.2 * m_v, 0], [0.2 * m_v, 0.2 * m_a], [0.2 * m_v, -0.2 * m_a], [0.2 * m_v, m_a],

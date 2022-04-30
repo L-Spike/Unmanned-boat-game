@@ -14,7 +14,7 @@ parser.add_argument('--config', type=str, default="normal", help='the name of co
 args = parser.parse_args()
 model_path = args.path
 
-config_name = args.name
+config_name = args.config
 if config_name == "normal":
     from config import *
 elif config_name == "1":

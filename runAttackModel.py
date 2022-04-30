@@ -14,7 +14,7 @@ parser.add_argument('--config', type=str, default='normal', help='the name of co
 args = parser.parse_args()
 model_path = args.path
 
-config_name = args.name
+config_name = args.config
 if config_name == 'normal':
     from config import *
 elif config_name == 'dis':
@@ -55,10 +55,8 @@ while i_episode < run_n_episode:
             action.append(a)
 
         next_obs, next_adj, reward, terminated = env.step(action)
-        print(reward)
+        # print(reward)
         if terminated:
-            print("so_done")
-            print(action)
             p.addUserDebugText(
                 text="Succeed!",
                 textPosition=[0, 0, 3],
@@ -69,7 +67,7 @@ while i_episode < run_n_episode:
             cur_result = 1
             time.sleep(1)
             break
-        print(steps)
+        # print(steps)
         # for ac in action:
         #     if 15 <= ac <=19:
         #         print("iop")
