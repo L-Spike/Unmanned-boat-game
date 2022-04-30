@@ -816,7 +816,9 @@ class GlobalAgentsEnv:
 
     # 进攻方行为接口
     def apply_attack_action2(self, attack_actions):
+        logging.debug(f'action:{attack_actions}')
         for agentId, attack_action in zip(self.attackAgentIds, attack_actions):
+            logging.debug(f'df:{attack_action}')
             oil = attack_action[0]
             rudder = attack_action[1]
             old_speed, old_w = p.getBaseVelocity(agentId)
