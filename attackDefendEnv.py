@@ -103,6 +103,23 @@ def relativeAngleWithSymbol(baseAngle, anotherAngle):
     return angle
 
 
+max_velocity = max_velocity
+max_turn_angle = max_turn_angle
+actionIndex2OilRudder = [[0, 0], [0, 0.2 * max_turn_angle], [0, -0.2 * max_turn_angle], [0, max_turn_angle],
+                         [0, -max_turn_angle],
+                         [0.2 * max_velocity, 0], [0.2 * max_velocity, 0.2 * max_turn_angle],
+                         [0.2 * max_velocity, -0.2 * max_turn_angle], [0.2 * max_velocity, max_turn_angle],
+                         [0.2 * max_velocity, -max_turn_angle],
+                         [-1 * 0.2 * max_velocity, 0], [-1 * 0.2 * max_velocity, 0.2 * max_turn_angle],
+                         [-1 * 0.2 * max_velocity, -0.2 * max_turn_angle],
+                         [-1 * 0.2 * max_velocity, max_turn_angle], [-1 * 0.2 * max_velocity, -max_turn_angle],
+                         [max_velocity, 0], [max_velocity, 0.2 * max_turn_angle], [max_velocity, -0.2 * max_turn_angle],
+                         [max_velocity, max_turn_angle], [max_velocity, -max_turn_angle],
+                         [-max_velocity, 0], [-max_velocity, 0.2 * max_turn_angle],
+                         [-max_velocity, -0.2 * max_turn_angle], [-max_velocity, max_turn_angle],
+                         [-max_velocity, -max_turn_angle]]
+
+
 # 进攻策略，可以采用规则化策略或者强化学习策略
 class AttackStrategy:
 
@@ -279,7 +296,7 @@ class DRLAttackStrategy(AttackStrategy):
         q = q[0]
         for i in range(self.n_ant):
             a = q[i].argmax().item()
-            action.append(a)
+            action.append(actionIndex2OilRudder[a])
         return action
 
 
@@ -745,7 +762,7 @@ class GlobalAgentsEnv:
         self.cur_step += 1
         a_state, a_reward = self.getAttackStateReward()
         attack_actions = self.attack_strategy.generate_actions([a_state, self.attack_adj])
-        logging.debug(f'a_state:{a_state}',  f'attack_actions:{attack_actions}')
+        logging.debug(f'a_state:{a_state}', f'attack_actions:{attack_actions}')
         self.apply_attack_action2(attack_actions)
         self.apply_defend_action2(defend_actions)
         p.stepSimulation()
@@ -851,22 +868,13 @@ class DefendAgentsEnv(gym.Env, ABC):
         super().__init__()
         self.global_agents_env = global_agents_env
         self.n_agent = defend_num
-        m_v = max_velocity
-        m_a = max_turn_angle
         self.n_observation = 3 + 10 * reward_agent_num
         self.n_action = 25
-        self.actionIndex2OilRudder = [[0, 0], [0, 0.2 * m_a], [0, -0.2 * m_a], [0, m_a], [0, -m_a],
-                                      [0.2 * m_v, 0], [0.2 * m_v, 0.2 * m_a], [0.2 * m_v, -0.2 * m_a], [0.2 * m_v, m_a],
-                                      [0.2 * m_v, -m_a],
-                                      [-1 * 0.2 * m_v, 0], [-1 * 0.2 * m_v, 0.2 * m_a], [-1 * 0.2 * m_v, -0.2 * m_a],
-                                      [-1 * 0.2 * m_v, m_a], [-1 * 0.2 * m_v, -m_a],
-                                      [m_v, 0], [m_v, 0.2 * m_a], [m_v, -0.2 * m_a], [m_v, m_a], [m_v, -m_a],
-                                      [-m_v, 0], [-m_v, 0.2 * m_a], [-m_v, -0.2 * m_a], [-m_v, m_a], [-m_v, -m_a]]
 
     def step(self, actions):
         actions_ = []
         for action in actions:
-            actions_.append(self.actionIndex2OilRudder[action])
+            actions_.append(actionIndex2OilRudder[action])
         state, adj, reward, done = self.global_agents_env.apply_defend_action(actions_)
         return state, adj, reward, done
 
@@ -886,22 +894,13 @@ class AttackAgentsEnv(gym.Env, ABC):
         super().__init__()
         self.global_agents_env = global_agents_env
         self.n_agent = attack_num
-        m_v = max_velocity
-        m_a = max_turn_angle
         self.n_observation = 3 + 10 * reward_agent_num
         self.n_action = 25
-        self.actionIndex2OilRudder = [[0, 0], [0, 0.2 * m_a], [0, -0.2 * m_a], [0, m_a], [0, -m_a],
-                                      [0.2 * m_v, 0], [0.2 * m_v, 0.2 * m_a], [0.2 * m_v, -0.2 * m_a], [0.2 * m_v, m_a],
-                                      [0.2 * m_v, -m_a],
-                                      [-1 * 0.2 * m_v, 0], [-1 * 0.2 * m_v, 0.2 * m_a], [-1 * 0.2 * m_v, -0.2 * m_a],
-                                      [-1 * 0.2 * m_v, m_a], [-1 * 0.2 * m_v, -m_a],
-                                      [m_v, 0], [m_v, 0.2 * m_a], [m_v, -0.2 * m_a], [m_v, m_a], [m_v, -m_a],
-                                      [-m_v, 0], [-m_v, 0.2 * m_a], [-m_v, -0.2 * m_a], [-m_v, m_a], [-m_v, -m_a]]
 
     def step(self, actions):
         actions_ = []
         for action in actions:
-            actions_.append(self.actionIndex2OilRudder[action])
+            actions_.append(actionIndex2OilRudder[action])
         state, adj, reward, done = self.global_agents_env.apply_attack_action(actions_)
         return state, adj, reward, done
 
