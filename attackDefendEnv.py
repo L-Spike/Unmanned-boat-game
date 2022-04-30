@@ -745,6 +745,7 @@ class GlobalAgentsEnv:
         self.cur_step += 1
         a_state, a_reward = self.getAttackStateReward()
         attack_actions = self.attack_strategy.generate_actions([a_state, self.attack_adj])
+        logging.debug(f'a_state:{a_state}',  f'attack_actions:{attack_actions}')
         self.apply_attack_action2(attack_actions)
         self.apply_defend_action2(defend_actions)
         p.stepSimulation()
