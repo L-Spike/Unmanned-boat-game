@@ -19,7 +19,7 @@ from model import DGN
 level = logging.DEBUG  # INFO 、WARNING、ERROR、CRITICAL
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(filename)s - %(funcName)s() - %(message)s',
-    level=logging.DEBUG)
+    level=logging.INFO)
 from config import *
 
 
