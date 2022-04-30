@@ -21,7 +21,7 @@ description = 'train defend model main function'
 parser = argparse.ArgumentParser(description=description)
 parser.add_argument('--config', type=str, default="normal", help='the name of config file')
 args = parser.parse_args()
-config_name = args.name
+config_name = args.config
 
 if config_name == 'normal':
     from config import *
