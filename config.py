@@ -3,7 +3,7 @@ cuda_device = "1"
 use_done = True
 use_angle = True  # only for attack
 
-factor = 4
+defend_reward_factor = 4
 turn_radius = 2
 attack_reward_factor = 1
 not_find_reward = -0.1

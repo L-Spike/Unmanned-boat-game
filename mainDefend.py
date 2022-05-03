@@ -14,7 +14,7 @@ import os
 import argparse
 
 from attackDefendEnv import *
-from config import epsilon
+# from config import epsilon
 
 USE_CUDA = torch.cuda.is_available()
 description = 'train defend model main function'
@@ -64,6 +64,7 @@ evaluating_indicator = {"Cumulative reward": cumulative_rewards, "losses": losse
 
 while i_episode < n_episode:
 
+    # 900个 0.01
     if i_episode > 40:
         epsilon -= 0.001
         if epsilon < 0.01:

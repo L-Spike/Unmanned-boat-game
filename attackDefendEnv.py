@@ -13,6 +13,7 @@ import torch
 from gym import spaces
 
 import logging
+from config import *
 
 from model import DGN
 
@@ -20,7 +21,6 @@ level = logging.DEBUG  # INFO 、WARNING、ERROR、CRITICAL
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(filename)s - %(funcName)s() - %(message)s',
     level=logging.INFO)
-from config import *
 
 
 def velocityConversion(velocity, angle):
@@ -352,6 +352,53 @@ def transformState(state):
     return g_state
 
 
+def attackRewardDisAngle(dis, angle):
+    # math.pi*d
+    # phi - sin(phi)
+    angle = 360 - angle if angle > 180 else angle
+    angle = angle * math.pi / 180
+    change_item = turn_radius * abs(angle - math.sin(angle))
+    return -(dis + change_item) * attack_reward_factor
+
+
+def attackRewardDis(dis):
+    return -dis * attack_reward_factor
+
+
+def defendRewardDisAngle(dis, target_angle_delta):
+    change_item = turn_radius * target_angle_delta * math.pi/180
+    reward_item = - (dis + change_item)*defend_reward_factor
+    return reward_item
+
+
+def defendReward(s, phi, angle1, angle2, velocity1, velocity2):
+    # # 没有危险，不用追捕
+    # if s > self.threat_dis and 130 < phi < 230:
+    #     return 0
+
+    # 计算相对角度，小于2倍的危险角度就认为可能发生碰撞
+    re_angle = relativeAngle(phi, angle1)
+    re_angle2 = relativeAngle(phi, angle2)
+    theta = re_angle2 / 180 * math.sin(math.pi)
+    sin_value = math.sin(theta) * velocity2 / (velocity1 + 0.01)
+
+    if sin_value > 1:
+        return not_to_catch_reward
+    alpha = math.atan(sin_value)
+    # if alpha < theta:(只有一个解)
+    delta = math.pi - alpha - theta
+    # delta = alpha - theta  (数形结合)
+    d = s / math.sin(delta) * math.sin(theta)
+    symbol = 1 if relativeAngleWithSymbol(phi, angle2) > 0 else -1
+    target_angle = phi + alpha * symbol
+    target_angle_delta = relativeAngle(target_angle, angle1)
+
+    if s > capture_dis:
+        return defendRewardDisAngle(d, target_angle_delta)
+    else:
+        return capture_reward
+
+
 class GlobalAgentsEnv:
     def __init__(self, defend_stratedy, attack_strategy,
                  render: bool = False):
@@ -487,43 +534,6 @@ class GlobalAgentsEnv:
     def set_attack_strategy(self, attack_strategy: AttackStrategy):
         self.attack_strategy: AttackStrategy = attack_strategy
 
-    # 守方reward
-    def defendReward(self, s, phi, angle1, angle2, velocity1, velocity2):
-
-        # # 没有危险，不用追捕
-        # if s > self.threat_dis and 130 < phi < 230:
-        #     return 0
-
-        # 计算相对角度，小于2倍的危险角度就认为可能发生碰撞
-        re_angle = relativeAngle(phi, angle1)
-        re_angle2 = relativeAngle(phi, angle2)
-        theta = re_angle2 / 180 * math.sin(math.pi)
-        sin_value = math.sin(theta) * velocity2 / (velocity1 + 0.01)
-
-        if sin_value > 1:
-            return not_to_catch_reward
-        alpha = math.atan(sin_value)
-        # if alpha < theta:(只有一个解)
-        delta = math.pi - alpha - theta
-        # delta = alpha - theta  (数形结合)
-        d = s / math.sin(delta) * math.sin(theta)
-        symbol = 1 if relativeAngleWithSymbol(phi, angle2) > 0 else -1
-        target_angle = phi + alpha * symbol
-        target_angle_delta = relativeAngle(target_angle, angle1)
-
-        reward_item = d * target_angle_delta * factor
-        if s > capture_dis:
-            return -reward_item
-        else:
-            return capture_reward
-
-    # 攻方reward
-    def attackReward(self, s, angle):
-        if s < done_dis:
-            return 10
-        if angle < done_dis:
-            return 5
-
     def updateCurPositionsVelocities(self):
         for agent_id in self.attackAgentIds:
             position, _ = p.getBasePositionAndOrientation(agent_id)
@@ -538,17 +548,6 @@ class GlobalAgentsEnv:
             self.agentCurPositions[self.id2Index[agent_id]] = position
             velocity, _ = p.getBaseVelocity(agent_id)
             self.agentCurVelocities[self.id2Index[agent_id]] = velocity
-
-    def attackRewardDisAngle(self, dis, angle):
-        # math.pi*d
-        # phi - sin(phi)
-        angle = 360 - angle if angle > 180 else angle
-        angle = angle * math.pi / 180
-        change_item = turn_radius * abs(angle - math.sin(angle))
-        return -(dis + change_item) * attack_reward_factor
-
-    def attackRewardDis(self, dis):
-        return -dis * attack_reward_factor
 
     def updateStateReward(self):
         state = [[], []]
@@ -577,9 +576,9 @@ class GlobalAgentsEnv:
 
             # calculate attack reward
             if use_angle:
-                attack_reward = self.attackRewardDisAngle(dis, cur_angle)
+                attack_reward = attackRewardDisAngle(dis, cur_angle)
             else:
-                attack_reward = self.attackRewardDis(dis)
+                attack_reward = attackRewardDis(dis)
             reward[0].append(attack_reward)
 
             for other_agent_id in self.attackAgentIds:
@@ -669,8 +668,8 @@ class GlobalAgentsEnv:
             # 选择最近的攻击方智能体进行防守
             cur_observe_ = cur_observe[2][0]
             if cur_observe_[0] != 0:
-                defend_reward = self.defendReward(cur_observe_[1], cur_observe_[2], cur_angle, cur_observe_[4],
-                                                  cur_velocity, cur_observe_[3])
+                defend_reward = defendReward(cur_observe_[1], cur_observe_[2], cur_angle, cur_observe_[4],
+                                             cur_velocity, cur_observe_[3])
             else:
                 # 处理lazy？  未发现敌方
                 defend_reward = not_find_reward
