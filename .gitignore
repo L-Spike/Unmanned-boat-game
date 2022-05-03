@@ -2,6 +2,10 @@
 *.txt
 demos/
 models/model*
+attack_models/
+defend_models/
+attack_train_data/
+defend_train_data/
 train_data/*.pkl
 venv/
 __pycache__/
