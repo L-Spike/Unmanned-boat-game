@@ -9,8 +9,9 @@ from config import *
 USE_CUDA = torch.cuda.is_available()
 description = 'run Defend model'
 parser = argparse.ArgumentParser(description=description)
-parser.add_argument('path', type=str, help='the path of model')
+parser.add_argument('path', type=str, help='the path of defend model')
 parser.add_argument('--config', type=str, default="normal", help='the name of config')
+parser.add_argument('--attack_model_path', '-amp', type=str, default=None, help='the path of attack model, None for rules')
 args = parser.parse_args()
 model_path = args.path
 
@@ -25,9 +26,9 @@ else:
     print(f'invalid config name:{config_name}!')
     exit(0)
 
-
+attack_model_path = args.attack_model_path
 g_env = GlobalAgentsEnv(RandomDefendStrategy(),
-                        SimpleAttackStrategy(),
+                        attack_strategy=SimpleAttackStrategy() if attack_model_path is None else DRLAttackStrategy(model_path=attack_model_path),
                         render=True
                         )
 env = DefendAgentsEnv(g_env)

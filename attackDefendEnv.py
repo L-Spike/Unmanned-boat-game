@@ -626,7 +626,7 @@ class GlobalAgentsEnv:
             cur_velocity, cur_angle = velocityConversionVerse(cur_speed)
             base_angle = azimuthAngleWP(cur_position, target_position)
             cur_angle = azimuthAngleWA(base_angle, cur_angle)
-            cur_observe = [[cur_velocity, cur_angle], [], [], -1]
+            cur_observe = [[cur_agent_id, cur_velocity, cur_angle], [], [], -1]
             cur_observe[3] = getDis(target_position, cur_position)
 
             for other_agent_id in self.defendAgentIds:
@@ -868,7 +868,7 @@ class DefendAgentsEnv(gym.Env, ABC):
         super().__init__()
         self.global_agents_env = global_agents_env
         self.n_agent = defend_num
-        self.n_observation = 3 + 10 * reward_agent_num
+        self.n_observation = 4 + 10 * reward_agent_num
         self.n_action = 25
 
     def step(self, actions):
