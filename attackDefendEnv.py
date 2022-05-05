@@ -425,7 +425,7 @@ def defendRewardSimple(s, phi, angle1, angle2, velocity1, velocity2):
 
 def defendRewardSimpleV2(s, s_t):
     if s > capture_dis:
-        return -s + (s_t - forbidden_radius) * 2
+        return -s
     else:
         return capture_reward + (s_t - forbidden_radius) * 2
 
