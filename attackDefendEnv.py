@@ -423,6 +423,13 @@ def defendRewardSimple(s, phi, angle1, angle2, velocity1, velocity2):
         return capture_reward
 
 
+def defendRewardSimpleV2(s, s_t):
+    if s > capture_dis:
+        return -s + (s_t - forbidden_radius) * 2
+    else:
+        return capture_reward + (s_t - forbidden_radius) * 2
+
+
 class GlobalAgentsEnv:
     def __init__(self, defend_stratedy, attack_strategy,
                  render: bool = False):
@@ -699,8 +706,7 @@ class GlobalAgentsEnv:
             from_ = list(cur_position[:])
             from_.append(0)
             if cur_observe_[0] != 0:
-                defend_reward = defendRewardSimple(cur_observe_[1], cur_observe_[2], cur_angle, cur_observe_[4],
-                                                   cur_velocity, cur_observe_[3])
+                defend_reward = defendRewardSimpleV2(cur_observe_[1], cur_observe[3])
 
                 if self.defendLineTime == 0 and DEBUG:
                     if cur_agent_id in self.defendLines:
