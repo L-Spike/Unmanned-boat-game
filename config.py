@@ -1,5 +1,8 @@
 cuda_device = "1"
 
+DEBUG = False  # draw debug item
+
+
 use_done = True
 use_angle = True  # only for attack
 

@@ -81,6 +81,17 @@ def transferRelativePosition(pos1, pos2, pos3):
     return s, phi
 
 
+def transferRelativePositionReverse(pos1, s, phi, pos3):
+    angle2 = azimuthAngleWP(pos1, pos3)
+    angle = (angle2 + phi) % 360
+    dx = s * math.sin(angle * math.pi / 180)
+    dy = s * math.cos(angle * math.pi / 180)
+    return [pos1[0] + dx, pos1[1] + dy]
+
+
+# s, phi = transferRelativePosition(cur_position, other_position, target_position)
+
+
 def transferRelativeAngle(angle1, pos1, pos2):
     angle = azimuthAngleWP(pos1, pos2)
     return azimuthAngleWA(angle, angle1)
@@ -366,8 +377,14 @@ def attackRewardDis(dis):
 
 
 def defendRewardDisAngle(dis, target_angle_delta):
-    change_item = turn_radius * target_angle_delta * math.pi/180
-    reward_item = - (dis + change_item)*defend_reward_factor
+    change_item = turn_radius * target_angle_delta * math.pi / 180
+    reward_item = - (dis + change_item) * defend_reward_factor
+    return reward_item
+
+
+def defendRewardDisAngleDirect(dis, target_angle_delta):
+    change_item = turn_radius * target_angle_delta * math.pi / 180
+    reward_item = - (dis + change_item) * defend_reward_factor
     return reward_item
 
 
@@ -399,9 +416,19 @@ def defendReward(s, phi, angle1, angle2, velocity1, velocity2):
         return capture_reward
 
 
+def defendRewardSimple(s, phi, angle1, angle2, velocity1, velocity2):
+    if s > capture_dis:
+        return -s
+    else:
+        return capture_reward
+
+
 class GlobalAgentsEnv:
     def __init__(self, defend_stratedy, attack_strategy,
                  render: bool = False):
+        self.defendWords = {}
+        self.defendLineTime = -1
+        self.defendLines = {}
         self.cur_step = 0
         # self.action_space = spaces.Discrete(5)
         # self.observation_space = spaces.Discrete(2)
@@ -619,6 +646,7 @@ class GlobalAgentsEnv:
             state[0].append(cur_observe)
 
         # observe for defend
+        self.defendLineTime = (self.defendLineTime + 1) % 100
         for cur_agent_id in self.defendAgentIds:
             cur_position = self.agentCurPositions[self.id2Index[cur_agent_id]]
             cur_speed = self.agentCurVelocities[self.id2Index[cur_agent_id]]
@@ -667,12 +695,37 @@ class GlobalAgentsEnv:
             # todo
             # 选择最近的攻击方智能体进行防守
             cur_observe_ = cur_observe[2][0]
+
+            from_ = list(cur_position[:])
+            from_.append(0)
             if cur_observe_[0] != 0:
-                defend_reward = defendReward(cur_observe_[1], cur_observe_[2], cur_angle, cur_observe_[4],
-                                             cur_velocity, cur_observe_[3])
+                defend_reward = defendRewardSimple(cur_observe_[1], cur_observe_[2], cur_angle, cur_observe_[4],
+                                                   cur_velocity, cur_observe_[3])
+
+                if self.defendLineTime == 0 and DEBUG:
+                    if cur_agent_id in self.defendLines:
+                        p.removeUserDebugItem(self.defendLines[cur_agent_id])
+                    to_ = transferRelativePositionReverse(pos1=cur_position, s=cur_observe_[1], phi=cur_observe_[2],
+                                                          pos3=target_position)
+                    to_.append(0)
+                    self.defendLines[cur_agent_id] = p.addUserDebugLine(
+                        lineFromXYZ=from_,
+                        lineToXYZ=to_,
+                        lineColorRGB=[34 / 255, 34 / 255, 56 / 255],
+                        lineWidth=3
+                    )
             else:
                 # 处理lazy？  未发现敌方
                 defend_reward = not_find_reward
+                if self.defendLineTime == 0 and DEBUG:
+                    if cur_agent_id in self.defendWords:
+                        p.removeUserDebugItem(self.defendWords[cur_agent_id])
+                    self.defendWords[cur_agent_id] = p.addUserDebugText(
+                        text="LAZY!",
+                        textPosition=from_,
+                        textColorRGB=[5 / 255, 39 / 255, 175 / 255],  # 5；G:39；B:175
+                        textSize=3
+                    )
             reward[1].append(defend_reward)
             state[1].append(cur_observe)
 
