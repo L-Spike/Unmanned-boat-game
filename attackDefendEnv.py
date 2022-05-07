@@ -114,8 +114,6 @@ def relativeAngleWithSymbol(baseAngle, anotherAngle):
     return angle
 
 
-max_velocity = max_velocity
-max_turn_angle = max_turn_angle
 actionIndex2OilRudder = [[0, 0], [0, 0.2 * max_turn_angle], [0, -0.2 * max_turn_angle], [0, max_turn_angle],
                          [0, -max_turn_angle],
                          [0.2 * max_velocity, 0], [0.2 * max_velocity, 0.2 * max_turn_angle],
@@ -129,6 +127,8 @@ actionIndex2OilRudder = [[0, 0], [0, 0.2 * max_turn_angle], [0, -0.2 * max_turn_
                          [-max_velocity, 0], [-max_velocity, 0.2 * max_turn_angle],
                          [-max_velocity, -0.2 * max_turn_angle], [-max_velocity, max_turn_angle],
                          [-max_velocity, -max_turn_angle]]
+
+actinIndex2SpeedAll = []  # -1 stay   0 - 7   i * 45
 
 
 # 进攻策略，可以采用规则化策略或者强化学习策略
@@ -153,6 +153,18 @@ class DefendStrategy:
 
 # 简单的规则化进攻策略，采取部分可观测的环境设置
 # 每个agent有一个局部观测的state，嵌入到环境中
+def changeAngleToConcrete(angle):
+    b = angle % 45
+    a = angle // 45
+    if b == 0:
+        return angle
+    else:
+        if b > 22.5:
+            return (a + 1) * 45
+        else:
+            return a * 45
+
+
 class SimpleAttackStrategy(AttackStrategy):
     def __init__(self):
         super().__init__()
@@ -189,6 +201,7 @@ class SimpleAttackStrategy(AttackStrategy):
             logging.debug(f'agent_info: {agent_info}')
             velocity1 = agent_info[0][0]
             angle1 = agent_info[0][1]
+            base_angle = agent_info[-1]
             for attack_agent_info in agent_info[2]:
                 s = attack_agent_info[1]
                 phi = attack_agent_info[2]
@@ -203,24 +216,32 @@ class SimpleAttackStrategy(AttackStrategy):
                     min_threat_agent_info = attack_agent_info
 
             if min_threat_degree == self.max_threat_threshold:
-                oil, rudder = self.getActionsSimple(angle1)
+                if action_setting == "speed" and actinIndex == "all":
+                    # todo 更新绝对角度和速度
+                    action = [max_velocity, changeAngleToConcrete(base_angle)]
+                else:
+                    action = self.getActionsSimple(angle1)
             else:
                 # 计算
                 s = min_threat_agent_info[1]
                 phi = min_threat_agent_info[2]
                 velocity2 = min_threat_agent_info[3]
                 angle2 = min_threat_agent_info[4]
-                oil, rudder = self.getActionWithObstacles(s, phi, angle1, angle2, velocity1, velocity2, min_d,
-                                                          min_delta)
-            action = (oil, rudder)
+                if action_setting == "speed" and actinIndex == "all":
+                    action = self.getActionWithObstaclesBySpeed(s, phi, angle1, angle2, velocity1, velocity2, min_d,
+                                                                min_delta)
+                    action[1] = changeAngleToConcrete((action[1] + base_angle) % 360)
+                else:
+                    action = self.getActionWithObstacles(s, phi, angle1, angle2, velocity1, velocity2, min_d,
+                                                         min_delta)
             actions.append(action)
 
         # 遍历所有攻方（友方）agent todo
         return actions
 
-    def getActionsSimple(self, angle1):
-        angle1 = angle1 if angle1 < 180 else angle1 - 360
-        rudder = -5 if angle1 > 0 else +5
+    def getActionsSimple(self, angle):
+        angle = angle if angle < 180 else angle - 360
+        rudder = -5 if angle > 0 else +5
         oil = self.max_oil
         return oil, rudder
 
@@ -240,10 +261,17 @@ class SimpleAttackStrategy(AttackStrategy):
         # relative_angle_symbol = 1 if relative_angle > 0 else -1
         relative_angle_symbol = 1 if delta > 0 else -1
         if abs(delta) < self.small_angle:
-            rudder = 1 * relative_angle_symbol
-        else:
             rudder = 5 * relative_angle_symbol
+        else:
+            rudder = 1 * relative_angle_symbol
         return oil, rudder
+
+    def getActionWithObstaclesBySpeed(self, s, phi, angle1, angle2, velocity1, velocity2, d, delta):
+        if phi > 0:
+            target = (phi - 90) % 360
+        else:
+            target = (phi + 90) % 360
+        return [max_velocity, target]
 
     def calThreatDegree(self, s, phi, angle1, angle2, velocity1, velocity2):
         # 计算相对角度，小于2倍的危险角度就认为可能发生碰撞
@@ -263,10 +291,11 @@ class SimpleAttackStrategy(AttackStrategy):
         #             # todo 更加详细的威胁度评定
         #             return s * delta_angle
 
-        theta = re_angle2 / 180 * math.sin(math.pi)
+        theta = re_angle2 / 180 * math.pi
         sin_value = math.sin(theta) * velocity2 / (velocity1 + 0.01)
+        # todo
         if sin_value > 1:
-            return
+            return self.max_threat_threshold, -1, -1
         alpha = math.atan(sin_value)
         # if alpha < theta:(只有一个解)
         delta = math.pi - alpha - theta
@@ -358,6 +387,7 @@ def transformState(state):
             g_cur_state.extend(cur_state[1][j])
         for k in range(reward_agent_num):
             g_cur_state.extend(cur_state[2][k])
+        g_cur_state.append(cur_state[-2])
         g_cur_state.append(cur_state[-1])
         g_state.append(g_cur_state)
     return g_state
@@ -396,7 +426,8 @@ def defendReward(s, phi, angle1, angle2, velocity1, velocity2):
     # 计算相对角度，小于2倍的危险角度就认为可能发生碰撞
     re_angle = relativeAngle(phi, angle1)
     re_angle2 = relativeAngle(phi, angle2)
-    theta = re_angle2 / 180 * math.sin(math.pi)
+    # theta = re_angle2 / 180 * math.sin(math.pi)
+    theta = re_angle2 / 180 * math.pi
     sin_value = math.sin(theta) * velocity2 / (velocity1 + 0.01)
 
     if sin_value > 1:
@@ -604,7 +635,7 @@ class GlobalAgentsEnv:
             # [[cur_velocity, cur_angle], [[ther_agent_id, s, phi,
             # velocity, angle]...], [[ther_agent_id, s, phi, velocity, angle],...], dis]
 
-            cur_observe = [[cur_velocity, cur_angle], [], [], -1]
+            cur_observe = [[cur_velocity, cur_angle], [], [], -1, base_angle]
             dis = getDis(target_position, cur_position)
             cur_observe[3] = dis
 
@@ -660,7 +691,7 @@ class GlobalAgentsEnv:
             cur_velocity, cur_angle = velocityConversionVerse(cur_speed)
             base_angle = azimuthAngleWP(cur_position, target_position)
             cur_angle = azimuthAngleWA(base_angle, cur_angle)
-            cur_observe = [[cur_agent_id, cur_velocity, cur_angle], [], [], -1]
+            cur_observe = [[cur_agent_id, cur_velocity, cur_angle], [], [], -1, base_angle]
             cur_observe[3] = getDis(target_position, cur_position)
 
             for other_agent_id in self.defendAgentIds:
@@ -803,8 +834,8 @@ class GlobalAgentsEnv:
         # print(self.defend_total_reward)
         d_actions = self.defend_stratedy.generate_actions(d_state)
         a_actions = self.attack_strategy.generate_actions(a_state)
-        self.apply_defend_action2(d_actions)
-        self.apply_attack_action2(a_actions)
+        self.apply_defend_action_by_oil(d_actions)
+        self.apply_attack_action_by_oil(a_actions)
         p.stepSimulation()
         time.sleep(1 / 10)
 
@@ -821,8 +852,12 @@ class GlobalAgentsEnv:
         a_state, a_reward = self.getAttackStateReward()
         attack_actions = self.attack_strategy.generate_actions([a_state, self.attack_adj])
         logging.debug(f'a_state:{a_state}', f'attack_actions:{attack_actions}')
-        self.apply_attack_action2(attack_actions)
-        self.apply_defend_action2(defend_actions)
+        if action_setting == "speed":
+            self.apply_attack_action_by_speed(attack_actions)
+            self.apply_defend_action_by_speed(defend_actions)
+        else:
+            self.apply_attack_action_by_oil(attack_actions)
+            self.apply_defend_action_by_oil(defend_actions)
         p.stepSimulation()
 
         self.updateStateReward()
@@ -846,8 +881,8 @@ class GlobalAgentsEnv:
         self.cur_step += 1
         d_state, d_reward = self.getDefendStateReward()
         defend_actions = self.defend_stratedy.generate_actions(d_state)
-        self.apply_defend_action2(defend_actions)
-        self.apply_attack_action2(attack_actions)
+        self.apply_defend_action_by_oil(defend_actions)
+        self.apply_attack_action_by_oil(attack_actions)
         p.stepSimulation()
 
         self.updateStateReward()
@@ -866,7 +901,7 @@ class GlobalAgentsEnv:
         return state, self.attack_adj, reward, done
 
     # 防守方行为接口
-    def apply_defend_action2(self, defend_actions):
+    def apply_defend_action_by_oil(self, defend_actions):
         # defend_actions n个防守方的速度
         # [[大小，方向],[]]
         # 对每个智能体的速度进行改变
@@ -890,8 +925,18 @@ class GlobalAgentsEnv:
             p.resetBasePositionAndOrientation(agentId, old_position, new_orientation)
             p.resetBaseVelocity(agentId, speed, [0, 0, 0])
 
+    def apply_defend_action_by_speed(self, defend_actions):
+        for agentId, defend_action in zip(self.defendAgentIds, defend_actions):
+            velocity, angle = defend_action
+            old_position, old_orientation = p.getBasePositionAndOrientation(agentId)
+            speed = velocityConversion(velocity, angle)
+            # 设置加速度
+            new_orientation = p.getQuaternionFromEuler([0, 0, -angle * math.pi / 180])
+            p.resetBasePositionAndOrientation(agentId, old_position, new_orientation)
+            p.resetBaseVelocity(agentId, speed, [0, 0, 0])
+
     # 进攻方行为接口
-    def apply_attack_action2(self, attack_actions):
+    def apply_attack_action_by_oil(self, attack_actions):
         logging.debug(f'action:{attack_actions}')
         for agentId, attack_action in zip(self.attackAgentIds, attack_actions):
             logging.debug(f'df:{attack_action}')
@@ -912,6 +957,16 @@ class GlobalAgentsEnv:
             p.resetBasePositionAndOrientation(agentId, old_position, new_orientation)
             p.resetBaseVelocity(agentId, speed, [0, 0, 0])
 
+    def apply_attack_action_by_speed(self, attack_actions):
+        for agentId, attack_action in zip(self.attackAgentIds, attack_actions):
+            velocity, angle = attack_action
+            old_position, old_orientation = p.getBasePositionAndOrientation(agentId)
+            speed = velocityConversion(velocity, angle)
+            # 设置加速度
+            new_orientation = p.getQuaternionFromEuler([0, 0, -angle * math.pi / 180])
+            p.resetBasePositionAndOrientation(agentId, old_position, new_orientation)
+            p.resetBaseVelocity(agentId, speed, [0, 0, 0])
+
     # 速度改变机制
     def changeSpeed(self, velocity, angle, oil, rudder):
         velocity = velocity + oil
@@ -927,12 +982,21 @@ class DefendAgentsEnv(gym.Env, ABC):
         self.global_agents_env = global_agents_env
         self.n_agent = defend_num
         self.n_observation = 4 + 10 * reward_agent_num
-        self.n_action = 25
+        if action_setting == "speed" and actinIndex == "all":
+            self.n_action = 9
+        else:
+            self.n_action = 25
 
     def step(self, actions):
         actions_ = []
         for action in actions:
-            actions_.append(actionIndex2OilRudder[action])
+            if action_setting == "speed" and actinIndex == "all":
+                if action == -1:
+                    actions_.append([0, 0])
+                else:
+                    actions_.append([max_velocity, action * 45])
+            else:
+                actions_.append(actionIndex2OilRudder[action])
         state, adj, reward, done = self.global_agents_env.apply_defend_action(actions_)
         return state, adj, reward, done
 
