@@ -201,7 +201,7 @@ class SimpleAttackStrategy(AttackStrategy):
             logging.debug(f'agent_info: {agent_info}')
             velocity1 = agent_info[0][0]
             angle1 = agent_info[0][1]
-            base_angle = agent_info[-1]
+            base_angle = agent_info[-1][1]
             for attack_agent_info in agent_info[2]:
                 s = attack_agent_info[1]
                 phi = attack_agent_info[2]
@@ -220,6 +220,7 @@ class SimpleAttackStrategy(AttackStrategy):
                     # todo 更新绝对角度和速度
                     action = [max_velocity, changeAngleToConcrete(base_angle)]
                 else:
+                    # todo bug
                     action = self.getActionsSimple(angle1)
             else:
                 # 计算
