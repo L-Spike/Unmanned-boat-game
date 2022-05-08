@@ -4,6 +4,8 @@ DEBUG = False  # draw debug item
 action_setting = "speed"
 actinIndex = "all"
 
+use_forbidden_reward = False
+
 use_done = True
 use_angle = True  # only for attack
 

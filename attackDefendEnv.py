@@ -767,10 +767,10 @@ class GlobalAgentsEnv:
             state[1].append(cur_observe)
 
         # 进入极端距离的负奖励
-        # todo
-        ex_threat_r = self.getForbiddenReward()
-        for i in range(defend_num):
-            reward[1][i] += ex_threat_r
+        if use_forbidden_reward:
+            ex_threat_r = self.getForbiddenReward()
+            for i in range(defend_num):
+                reward[1][i] += ex_threat_r
 
         # 修改reward
         self.state = state

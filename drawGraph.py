@@ -22,9 +22,8 @@ with open(file_path, "rb") as f:
 sns.set(style="darkgrid")
 # # sns.set(style="darkgrid", font_scale=1.5)
 
-plt.subplot(1, 2, 1)
+plt.subplot(1, 3, 1)
 data1 = data["Cumulative reward"]
-data1 = data1[500:]
 sns.lineplot(data=data1, color="r")
 plt.ylabel("cumulative reward")
 plt.xlabel("episode number")
@@ -32,10 +31,17 @@ plt.title("Results")
 
 # sns.lineplot( data=data_diy, color="r", estimator='mean')
 
-plt.subplot(1, 2, 2)  # 图一包含1行2列子图，当前画在第一行第一列图上
-data2 = data['losses'][500:]
+plt.subplot(1, 3, 2)  # 图一包含1行2列子图，当前画在第一行第一列图上
+data2 = data['losses']
 sns.lineplot( data=data2, color="r")
 plt.ylabel("losses")
+plt.xlabel("episode number")
+plt.title("Results")
+
+plt.subplot(1, 3, 3)  # 图一包含1行2列子图，当前画在第一行第一列图上
+data2 = data['episode_steps']
+sns.lineplot( data=data2, color="r")
+plt.ylabel("episode_steps")
 plt.xlabel("episode number")
 plt.title("Results")
 

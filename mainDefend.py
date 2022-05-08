@@ -14,6 +14,7 @@ import os
 import argparse
 
 from attackDefendEnv import *
+
 # from config import epsilon
 
 USE_CUDA = torch.cuda.is_available()
@@ -32,7 +33,6 @@ elif config_name == '2':
 else:
     print(f'invalid config name:{config_name}!')
     exit(0)
-
 
 USE_CUDA = torch.cuda.is_available()
 os.environ['CUDA_VISIBLE_DEVICES'] = cuda_device
@@ -56,11 +56,22 @@ optimizer = optim.Adam(model.parameters(), lr=0.0001)
 M_Null = torch.Tensor(np.array([np.eye(n_ant)] * batch_size)).cuda()
 KL = nn.KLDivLoss()
 
+model_dirs = "defend_models"
+if not os.path.exists(model_dirs):
+    os.makedirs(model_dirs)
+
+data_dirs = "defend_train_data"
+if not os.path.exists(data_dirs):
+    os.makedirs(data_dirs)
+
 # data = {"mean": means, "std": stds}
 cumulative_rewards = []
 losses = []
-evaluating_indicator = {"Cumulative reward": cumulative_rewards, "losses": losses}
-
+loss1s = []
+loss2s = []
+episode_steps = []
+evaluating_indicator = {"Cumulative reward": cumulative_rewards, "losses": [loss1s, loss2s],
+                        "episode_steps": episode_steps}
 
 while i_episode < n_episode:
 
@@ -99,6 +110,7 @@ while i_episode < n_episode:
         adj = next_adj
 
     cumulative_rewards.append(score)
+    episode_steps.append(steps)
 
     print(f"i_episode: {i_episode}")
     print(f"score:{score}")
@@ -106,6 +118,8 @@ while i_episode < n_episode:
     if i_episode < 40:
         continue
     loss_rollouts = []
+    loss1_rollouts = []
+    loss2_rollouts = []
     for e in range(n_epoch):
 
         O, A, R, Next_O, Matrix, Next_Matrix, D = buff.getBatch(batch_size)
@@ -130,7 +144,10 @@ while i_episode < n_episode:
         target_attention = target_attention.detach()
         loss_kl = F.kl_div(attention, target_attention, reduction='mean')
 
-        loss = (q_values - torch.Tensor(expected_q).cuda()).pow(2).mean() + lamb * loss_kl
+        # loss = (q_values - torch.Tensor(expected_q).cuda()).pow(2).mean() + lamb * loss_kl/;
+        loss1 = (q_values - torch.Tensor(expected_q).cuda()).pow(2).mean()
+        loss2 = lamb * loss_kl
+        loss = loss1 + loss2
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -140,16 +157,26 @@ while i_episode < n_episode:
                 p_targ.data.mul_(tau)
                 p_targ.data.add_((1 - tau) * p.data)
         loss_value = loss.item()
+        loss1_value = loss1.item()
+        loss2_value = loss2.item()
         loss_rollouts.append(loss_value)
+        loss1_rollouts.append(loss1_value)
+        loss2_rollouts.append(loss1_value)
 
     losses.append(np.mean(loss_rollouts))
+    loss1s.append(np.mean(loss1_rollouts))
+    loss2s.append(np.mean(loss2_rollouts))
 
-    if i_episode%1000 == 0:
+    if i_episode % 1000 == 0:
         # 存储网络参数， 完成预测
         time_tuple = time.localtime(time.time())
-        model_save_path = os.path.join("models", "./model_{}_{}_{}_{}_{}".format(time_tuple[1], time_tuple[2], time_tuple[3], time_tuple[4], i_episode))
+        model_save_path = os.path.join(model_dirs,
+                                       "model_{}_{}_{}_{}_{}".format(time_tuple[1], time_tuple[2], time_tuple[3],
+                                                                     time_tuple[4], i_episode))
         torch.save(model.state_dict(), model_save_path)
 
 time_tuple = time.localtime(time.time())
-with open(os.path.join("train_data", "evaluating_indicator_{}_{}_{}_{}".format(time_tuple[1], time_tuple[2], time_tuple[3], time_tuple[4])+".pkl"), "wb") as f:
+with open(os.path.join(data_dirs,
+                       "data_{}_{}_{}_{}".format(time_tuple[1], time_tuple[2], time_tuple[3], time_tuple[4]) + ".pkl"),
+          "wb") as f:
     pickle.dump(evaluating_indicator, f, pickle.HIGHEST_PROTOCOL)
