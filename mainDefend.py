@@ -161,7 +161,7 @@ while i_episode < n_episode:
         loss2_value = loss2.item()
         loss_rollouts.append(loss_value)
         loss1_rollouts.append(loss1_value)
-        loss2_rollouts.append(loss1_value)
+        loss2_rollouts.append(loss2_value)
 
     losses.append(np.mean(loss_rollouts))
     loss1s.append(np.mean(loss1_rollouts))
