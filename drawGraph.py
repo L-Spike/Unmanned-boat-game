@@ -32,16 +32,24 @@ plt.title("Results")
 # sns.lineplot( data=data_diy, color="r", estimator='mean')
 
 plt.subplot(1, 3, 2)  # 图一包含1行2列子图，当前画在第一行第一列图上
-data2 = data['losses']
+data2 = data['losses'][0]
 sns.lineplot( data=data2, color="r")
 plt.ylabel("losses")
 plt.xlabel("episode number")
 plt.title("Results")
 
 plt.subplot(1, 3, 3)  # 图一包含1行2列子图，当前画在第一行第一列图上
-data2 = data['episode_steps']
-sns.lineplot( data=data2, color="r")
+data3 = data['episode_steps']
+sns.lineplot( data=data3, color="r")
 plt.ylabel("episode_steps")
+plt.xlabel("episode number")
+plt.title("Results")
+
+plt.figure(2)
+# plt.subplot(1, 3, 2)  # 图一包含1行2列子图，当前画在第一行第一列图上
+data4 = data['losses'][1]
+sns.lineplot(data=data4, color="r")
+plt.ylabel("losses")
 plt.xlabel("episode number")
 plt.title("Results")
 
