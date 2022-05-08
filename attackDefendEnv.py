@@ -629,21 +629,20 @@ class GlobalAgentsEnv:
             cur_position = self.agentCurPositions[self.id2Index[cur_agent_id]]
             cur_speed = self.agentCurVelocities[self.id2Index[cur_agent_id]]
             cur_velocity, cur_angle = velocityConversionVerse(cur_speed)
-            base_angle = azimuthAngleWP(cur_position, target_position)
-            cur_angle = azimuthAngleWA(base_angle, cur_angle)
 
             # [[cur_velocity, cur_angle], [[ther_agent_id, s, phi,
             # velocity, angle]...], [[ther_agent_id, s, phi, velocity, angle],...], dis]
 
-            cur_observe = [[cur_velocity, cur_angle], [], [], -1, base_angle]
-            dis = getDis(target_position, cur_position)
-            cur_observe[3] = dis
+            cur_observe = [[cur_agent_id, cur_velocity, cur_angle], [], [], []]
+            s = getDis(target_position, cur_position)
+            phi = azimuthAngleWP(cur_position, target_position)
+            cur_observe[3] = [s, phi]
 
             # calculate attack reward
             if use_angle:
-                attack_reward = attackRewardDisAngle(dis, cur_angle)
+                attack_reward = attackRewardDisAngle(s, cur_angle)
             else:
-                attack_reward = attackRewardDis(dis)
+                attack_reward = attackRewardDis(s)
             reward[0].append(attack_reward)
 
             for other_agent_id in self.attackAgentIds:
@@ -651,13 +650,11 @@ class GlobalAgentsEnv:
                     continue
                 other_position = self.agentCurPositions[self.id2Index[cur_agent_id]]
                 dis = getDis(cur_position, other_position)
-
                 if dis < communicate_radius:
-                    s, phi = transferRelativePosition(cur_position, other_position, target_position)
+                    phi = azimuthAngleWP(cur_position, other_position)
                     speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
                     velocity, angle = velocityConversionVerse(speed)
-                    angle = azimuthAngleWA(base_angle, angle)
-                    cur_observe[1].append([other_agent_id, s, phi, velocity, angle])
+                    cur_observe[1].append([other_agent_id, dis, phi, velocity, angle])
 
             cur_observe_sort = sorted(cur_observe[1], key=lambda x: (x[1], x[2]))[:reward_agent_num]
             if len(cur_observe_sort) < reward_agent_num:
@@ -669,18 +666,16 @@ class GlobalAgentsEnv:
                 other_position = self.agentCurPositions[self.id2Index[other_agent_id]]
                 dis = getDis(cur_position, other_position)
                 if dis < observe_radius:
-                    s, phi = transferRelativePosition(cur_position, other_position, target_position)
+                    phi = azimuthAngleWP(cur_position, other_position)
                     speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
                     velocity, angle = velocityConversionVerse(speed)
-                    angle = azimuthAngleWA(base_angle, angle)
-                    cur_observe[2].append([other_agent_id, s, phi, velocity, angle])
+                    cur_observe[2].append([other_agent_id, dis, phi, velocity, angle])
 
             cur_observe_sort = sorted(cur_observe[2], key=lambda x: (x[1], x[2]))[:reward_agent_num]
             if len(cur_observe_sort) < reward_agent_num:
                 for i in range(len(cur_observe_sort), reward_agent_num):
                     cur_observe_sort.append([0, 0, 0, 0, 0])
             cur_observe[2] = cur_observe_sort
-
             state[0].append(cur_observe)
 
         # observe for defend
@@ -689,10 +684,10 @@ class GlobalAgentsEnv:
             cur_position = self.agentCurPositions[self.id2Index[cur_agent_id]]
             cur_speed = self.agentCurVelocities[self.id2Index[cur_agent_id]]
             cur_velocity, cur_angle = velocityConversionVerse(cur_speed)
-            base_angle = azimuthAngleWP(cur_position, target_position)
-            cur_angle = azimuthAngleWA(base_angle, cur_angle)
-            cur_observe = [[cur_agent_id, cur_velocity, cur_angle], [], [], -1, base_angle]
-            cur_observe[3] = getDis(target_position, cur_position)
+            cur_observe = [[cur_agent_id, cur_velocity, cur_angle], [], [], []]
+            s = getDis(target_position, cur_position)
+            phi = azimuthAngleWP(cur_position, target_position)
+            cur_observe[3] = [s, phi]
 
             for other_agent_id in self.defendAgentIds:
                 if cur_agent_id == other_agent_id:
@@ -700,11 +695,10 @@ class GlobalAgentsEnv:
                 other_position = self.agentCurPositions[self.id2Index[other_agent_id]]
                 dis = getDis(cur_position, other_position)
                 if dis < communicate_radius:
-                    s, phi = transferRelativePosition(cur_position, other_position, target_position)
+                    phi = azimuthAngleWP(cur_position, other_position)
                     speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
                     velocity, angle = velocityConversionVerse(speed)
-                    angle = azimuthAngleWA(base_angle, angle)
-                    cur_observe[1].append([other_agent_id, s, phi, velocity, angle])
+                    cur_observe[1].append([other_agent_id, dis, phi, velocity, angle])
 
             cur_observe_sort = sorted(cur_observe[1], key=lambda x: x[1])[:reward_agent_num]
             cur_observe_sort_ = sorted(cur_observe_sort, key=lambda x: x[2])
@@ -717,10 +711,9 @@ class GlobalAgentsEnv:
                 other_position = self.agentCurPositions[self.id2Index[other_agent_id]]
                 dis = getDis(cur_position, other_position)
                 if dis < observe_radius:
-                    s, phi = transferRelativePosition(cur_position, other_position, target_position)
+                    phi = azimuthAngleWP(cur_position, other_position)
                     speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
                     velocity, angle = velocityConversionVerse(speed)
-                    angle = azimuthAngleWA(base_angle, angle)
                     cur_observe[2].append([other_agent_id, s, phi, velocity, angle])
 
             # todo 排序依据
@@ -737,7 +730,7 @@ class GlobalAgentsEnv:
             from_ = list(cur_position[:])
             from_.append(0)
             if cur_observe_[0] != 0:
-                defend_reward = defendRewardSimpleV2(cur_observe_[1], cur_observe[3])
+                defend_reward = defendRewardSimpleV2(cur_observe_[1], cur_observe[3][0])
 
                 if self.defendLineTime == 0 and DEBUG:
                     if cur_agent_id in self.defendLines:
