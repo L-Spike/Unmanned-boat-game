@@ -387,8 +387,7 @@ def transformState(state):
             g_cur_state.extend(cur_state[1][j])
         for k in range(reward_agent_num):
             g_cur_state.extend(cur_state[2][k])
-        g_cur_state.append(cur_state[-2])
-        g_cur_state.append(cur_state[-1])
+        g_cur_state.extend(cur_state[-1])
         g_state.append(g_cur_state)
     return g_state
 
