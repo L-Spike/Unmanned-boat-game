@@ -170,7 +170,6 @@ class SimpleAttackStrategy(AttackStrategy):
         super().__init__()
 
         self.max_oil = 5
-        self.threat_angle = threat_angle
         self.threat_dis = attack_threat_dis
         self.max_threat_threshold = attack_threat_dis * threat_angle
         self.threat_angle_delta = threat_angle_delta
@@ -208,12 +207,13 @@ class SimpleAttackStrategy(AttackStrategy):
                 phi = defend_agent_info[2]
                 velocity2 = defend_agent_info[3]
                 angle2 = defend_agent_info[4]
-                threat_degree, d, delta = self.calThreatDegree(s, phi, angle1, angle2, velocity1, velocity2)
+                # threat_degree, d, delta = self.calThreatDegree(s, phi, angle1, angle2, velocity1, velocity2)
+                threat_degree = self.calThreatDegreeSimple(s, phi, agent_info[-1][0], agent_info[-1][1])
                 if min_threat_degree > threat_degree:
                     # 处理  标记
                     min_threat_degree = threat_degree
-                    min_d = d
-                    min_delta = delta
+                    # min_d = d
+                    # min_delta = delta
                     min_threat_agent_info = defend_agent_info
 
             if min_threat_degree == self.max_threat_threshold:
@@ -314,10 +314,22 @@ class SimpleAttackStrategy(AttackStrategy):
 
         threat_item = d * target_angle_delta
 
-        if d > self.threat_dis or target_angle_delta > self.threat_angle:
+        if d > self.threat_dis or target_angle_delta > threat_angle:
             return self.max_threat_threshold, -1, -1
 
         return threat_item, d, target_angle_delta_with_symbol
+
+    # for the attack agent
+    def calThreatDegreeSimple(self, s, phi, s_t, s_t_phi):
+        if s > attack_threat_dis:
+            return attack_threat_dis
+
+        # project dis
+        project_angle = azimuthAngleWA(s_t_phi, phi)
+        # project_dis = math.cos(math.pi * project_angle / 180) * s
+        if 135 < project_angle < 225:
+            return attack_threat_dis
+
 
 
 class DRLAttackStrategy(AttackStrategy):
@@ -462,7 +474,7 @@ def defendRewardSimpleV2(s, s_t):
     if s > capture_dis:
         return -s
     else:
-        return capture_reward + (s_t - forbidden_radius) * 2
+        return capture_reward + (s_t - done_dis) * 2
 
 
 class GlobalAgentsEnv:
