@@ -57,7 +57,7 @@ while i_episode < run_n_episode:
             action.append(a)
 
         next_obs, next_adj, reward, terminated = env.step(action)
-        print(reward)
+        # print(reward)
         if terminated:
             print("so_done")
             print(action)
@@ -71,7 +71,7 @@ while i_episode < run_n_episode:
             cur_result = 1
             time.sleep(1)
             break
-        print(steps)
+        # print(steps)
         obs = next_obs
         adj = next_adj
         score += sum(reward)

@@ -198,22 +198,23 @@ class SimpleAttackStrategy(AttackStrategy):
             min_d = -1
             min_delta = -1
             min_threat_agent_info = None
-            logging.debug(f'agent_info: {agent_info}')
+            # logging.debug(f'agent_info: {agent_info}')
             velocity1 = agent_info[0][0]
             angle1 = agent_info[0][1]
             target_angle = agent_info[-1][1]
-            for attack_agent_info in agent_info[2]:
-                s = attack_agent_info[1]
-                phi = attack_agent_info[2]
-                velocity2 = attack_agent_info[3]
-                angle2 = attack_agent_info[4]
+            # print(f"智能体数量:{len(agent_info[2])}")
+            for defend_agent_info in agent_info[2]:
+                s = defend_agent_info[1]
+                phi = defend_agent_info[2]
+                velocity2 = defend_agent_info[3]
+                angle2 = defend_agent_info[4]
                 threat_degree, d, delta = self.calThreatDegree(s, phi, angle1, angle2, velocity1, velocity2)
                 if min_threat_degree > threat_degree:
                     # 处理  标记
                     min_threat_degree = threat_degree
                     min_d = d
                     min_delta = delta
-                    min_threat_agent_info = attack_agent_info
+                    min_threat_agent_info = defend_agent_info
 
             if min_threat_degree == self.max_threat_threshold:
                 if action_setting == "speed" and actinIndex == "all":
@@ -230,9 +231,11 @@ class SimpleAttackStrategy(AttackStrategy):
                 angle2 = min_threat_agent_info[4]
                 if action_setting == "speed" and actinIndex == "all":
                     symbol = 1 if relativeAngleWithSymbol(target_angle, phi) > 0 else -1
-                    target_angle = (phi + (symbol * 90)) % 360
+                    target_angle = (phi + (symbol * 135)) % 360
                     target_angle = changeAngleToConcrete(target_angle)
                     action = [max_velocity, target_angle]
+                    # p: {agent_info}
+                    logging.debug(f"攻击方{agent_index} s:{s} phi:{phi} 进行躲避角度：{target_angle} ")
                 else:
                     action = self.getActionWithObstacles(s, phi, angle1, angle2, velocity1, velocity2, min_d,
                                                          min_delta)
@@ -332,7 +335,7 @@ class DRLAttackStrategy(AttackStrategy):
         obs, adj = states
         action = []
         n_adj = adj + np.eye(self.n_ant)
-        logging.debug(f'obs:{obs} \n n_adj:{n_adj}')
+        # logging.debug(f'obs:{obs} \n n_adj:{n_adj}')
         obs = transformState(obs)
         q, a_w = self.model(torch.Tensor(np.array([obs])), torch.Tensor(np.array([n_adj])))
         q = q[0]
@@ -501,7 +504,7 @@ class GlobalAgentsEnv:
     def init_agent(self):
         # 将地面设置为光滑平面
         planeId = p.loadURDF("plane.urdf")
-        logging.debug(f'planeID:{planeId}')
+        # logging.debug(f'planeID:{planeId}')
         p.changeDynamics(planeId, 0, lateralFriction=0, spinningFriction=0, rollingFriction=0)
 
         # # 相机设置
@@ -550,8 +553,8 @@ class GlobalAgentsEnv:
             index_ += 1
             cur_angle += theta
 
-        logging.debug(f'attack ids:{self.attackAgentIds}')
-        logging.debug(f'defend ids: {self.defendAgentIds}')
+        # logging.debug(f'attack ids:{self.attackAgentIds}')
+        # logging.debug(f'defend ids: {self.defendAgentIds}')
 
     def reset(self):
 
@@ -845,7 +848,7 @@ class GlobalAgentsEnv:
         self.cur_step += 1
         a_state, a_reward = self.getAttackStateReward()
         attack_actions = self.attack_strategy.generate_actions([a_state, self.attack_adj])
-        logging.debug(f'a_state:{a_state}', f'attack_actions:{attack_actions}')
+        # logging.debug(f'a_state:{a_state}', f'attack_actions:{attack_actions}')
         if action_setting == "speed":
             self.apply_attack_action_by_speed(attack_actions)
             self.apply_defend_action_by_speed(defend_actions)
@@ -933,9 +936,9 @@ class GlobalAgentsEnv:
 
     # 进攻方行为接口
     def apply_attack_action_by_oil(self, attack_actions):
-        logging.debug(f'action:{attack_actions}')
+        # logging.debug(f'action:{attack_actions}')
         for agentId, attack_action in zip(self.attackAgentIds, attack_actions):
-            logging.debug(f'df:{attack_action}')
+            # logging.debug(f'df:{attack_action}')
             oil = attack_action[0]
             rudder = attack_action[1]
             old_speed, old_w = p.getBaseVelocity(agentId)
