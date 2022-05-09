@@ -201,7 +201,7 @@ class SimpleAttackStrategy(AttackStrategy):
             logging.debug(f'agent_info: {agent_info}')
             velocity1 = agent_info[0][0]
             angle1 = agent_info[0][1]
-            base_angle = agent_info[-1][1]
+            target_angle = agent_info[-1][1]
             for attack_agent_info in agent_info[2]:
                 s = attack_agent_info[1]
                 phi = attack_agent_info[2]
@@ -218,7 +218,7 @@ class SimpleAttackStrategy(AttackStrategy):
             if min_threat_degree == self.max_threat_threshold:
                 if action_setting == "speed" and actinIndex == "all":
                     # todo 更新绝对角度和速度
-                    action = [max_velocity, changeAngleToConcrete(base_angle)]
+                    action = [max_velocity, changeAngleToConcrete(target_angle)]
                 else:
                     # todo bug
                     action = self.getActionsSimple(angle1)
@@ -229,9 +229,10 @@ class SimpleAttackStrategy(AttackStrategy):
                 velocity2 = min_threat_agent_info[3]
                 angle2 = min_threat_agent_info[4]
                 if action_setting == "speed" and actinIndex == "all":
-                    action = self.getActionWithObstaclesBySpeed(s, phi, angle1, angle2, velocity1, velocity2, min_d,
-                                                                min_delta)
-                    action[1] = changeAngleToConcrete((action[1] + base_angle) % 360)
+                    symbol = 1 if relativeAngleWithSymbol(target_angle, phi) > 0 else -1
+                    target_angle = (phi + (symbol * 90)) % 360
+                    target_angle = changeAngleToConcrete(target_angle)
+                    action = [max_velocity, target_angle]
                 else:
                     action = self.getActionWithObstacles(s, phi, angle1, angle2, velocity1, velocity2, min_d,
                                                          min_delta)
@@ -851,7 +852,8 @@ class GlobalAgentsEnv:
         else:
             self.apply_attack_action_by_oil(attack_actions)
             self.apply_defend_action_by_oil(defend_actions)
-        p.stepSimulation()
+        for i in range(10):
+            p.stepSimulation()
 
         self.updateStateReward()
 
@@ -876,8 +878,9 @@ class GlobalAgentsEnv:
         defend_actions = self.defend_stratedy.generate_actions(d_state)
         self.apply_defend_action_by_oil(defend_actions)
         self.apply_attack_action_by_oil(attack_actions)
-        p.stepSimulation()
-
+        for i in range(40):
+            p.stepSimulation()
+        # p.stepSimulation()
         self.updateStateReward()
 
         state, reward = self.getAttackStateReward()

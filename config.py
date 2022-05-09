@@ -41,12 +41,12 @@ target_position = [0, 0]
 attack_succeed_reward = 50
 
 hidden_dim = 64
-max_step = 1000
+max_step = 100
 GAMMA = 0.99
 n_episode = 6000
 run_n_episode = 10
 i_episode = 0
-time_to_render = 1 / 240
+time_to_render = 1 / 12
 capacity = 100000
 batch_size = 64
 n_epoch = 25
