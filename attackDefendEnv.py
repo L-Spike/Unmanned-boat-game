@@ -484,9 +484,9 @@ def defendRewardSimpleV3(s, s_t2):
         return 1
     else:
         if s > capture_dis:
-            return -s + - (s_t2 - ignore_radius)
+            return -s + - (ignore_radius-s_t2)
         else:
-            return - (s_t2 - ignore_radius)
+            return - (ignore_radius-s_t2)
 
 
 class GlobalAgentsEnv:
