@@ -746,7 +746,7 @@ class GlobalAgentsEnv:
                     speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
                     velocity, angle = velocityConversionVerse(speed)
                     dis_t = getDis(target_position, other_position)
-                    cur_observe[2].append([other_agent_id, s, phi, velocity, angle, dis_t])
+                    cur_observe[2].append([other_agent_id, dis, phi, velocity, angle, dis_t])
 
             # todo 排序依据
             cur_observe_sort = sorted(cur_observe[2], key=lambda x: (x[1], x[2]))[:reward_agent_num]
