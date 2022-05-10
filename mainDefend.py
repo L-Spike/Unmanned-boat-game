@@ -77,7 +77,7 @@ while i_episode < n_episode:
 
     # 900个 0.01
     if i_episode > 40:
-        epsilon -= 0.001
+        epsilon -= 0.001 * epsilon_factor
         if epsilon < 0.01:
             epsilon = 0.01
     i_episode += 1
