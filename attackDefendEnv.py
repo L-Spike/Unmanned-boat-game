@@ -479,6 +479,16 @@ def defendRewardSimpleV2(s, s_t):
         return capture_reward + (s_t - done_dis) * 2
 
 
+def defendRewardSimpleV3(s, s_t2):
+    if s_t2 > ignore_radius:
+        return 1
+    else:
+        if s > capture_dis:
+            return -s + - (s_t2 - ignore_radius)
+        else:
+            return - (s_t2 - ignore_radius)
+
+
 class GlobalAgentsEnv:
     def __init__(self, defend_stratedy, attack_strategy,
                  render: bool = False):
@@ -672,12 +682,13 @@ class GlobalAgentsEnv:
                     phi = azimuthAngleWP(cur_position, other_position)
                     speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
                     velocity, angle = velocityConversionVerse(speed)
-                    cur_observe[1].append([other_agent_id, dis, phi, velocity, angle])
+                    dis_t = getDis(target_position, other_position)
+                    cur_observe[1].append([other_agent_id, dis, phi, velocity, angle, dis_t])
 
             cur_observe_sort = sorted(cur_observe[1], key=lambda x: (x[1], x[2]))[:reward_agent_num]
             if len(cur_observe_sort) < reward_agent_num:
                 for i in range(len(cur_observe_sort), reward_agent_num):
-                    cur_observe_sort.append([0, 0, 0, 0, 0])
+                    cur_observe_sort.append([0, 0, 0, 0, 0, 0])
             cur_observe[1] = cur_observe_sort
 
             for other_agent_id in self.defendAgentIds:
@@ -687,12 +698,13 @@ class GlobalAgentsEnv:
                     phi = azimuthAngleWP(cur_position, other_position)
                     speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
                     velocity, angle = velocityConversionVerse(speed)
-                    cur_observe[2].append([other_agent_id, dis, phi, velocity, angle])
+                    dis_t = getDis(target_position, other_position)
+                    cur_observe[2].append([other_agent_id, dis, phi, velocity, angle, dis_t])
 
             cur_observe_sort = sorted(cur_observe[2], key=lambda x: (x[1], x[2]))[:reward_agent_num]
             if len(cur_observe_sort) < reward_agent_num:
                 for i in range(len(cur_observe_sort), reward_agent_num):
-                    cur_observe_sort.append([0, 0, 0, 0, 0])
+                    cur_observe_sort.append([0, 0, 0, 0, 0, 0])
             cur_observe[2] = cur_observe_sort
             state[0].append(cur_observe)
 
@@ -716,13 +728,14 @@ class GlobalAgentsEnv:
                     phi = azimuthAngleWP(cur_position, other_position)
                     speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
                     velocity, angle = velocityConversionVerse(speed)
-                    cur_observe[1].append([other_agent_id, dis, phi, velocity, angle])
+                    dis_t = getDis(target_position, other_position)
+                    cur_observe[1].append([other_agent_id, dis, phi, velocity, angle, dis_t])
 
             cur_observe_sort = sorted(cur_observe[1], key=lambda x: x[1])[:reward_agent_num]
             cur_observe_sort_ = sorted(cur_observe_sort, key=lambda x: x[2])
             if len(cur_observe_sort) < reward_agent_num:
                 for i in range(len(cur_observe_sort), reward_agent_num):
-                    cur_observe_sort.append([0, 0, 0, 0, 0])
+                    cur_observe_sort.append([0, 0, 0, 0, 0, 0])
             cur_observe[1] = cur_observe_sort_
 
             for other_agent_id in self.attackAgentIds:
@@ -732,13 +745,14 @@ class GlobalAgentsEnv:
                     phi = azimuthAngleWP(cur_position, other_position)
                     speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
                     velocity, angle = velocityConversionVerse(speed)
-                    cur_observe[2].append([other_agent_id, s, phi, velocity, angle])
+                    dis_t = getDis(target_position, other_position)
+                    cur_observe[2].append([other_agent_id, s, phi, velocity, angle, dis_t])
 
             # todo 排序依据
             cur_observe_sort = sorted(cur_observe[2], key=lambda x: (x[1], x[2]))[:reward_agent_num]
             if len(cur_observe_sort) < reward_agent_num:
                 for i in range(len(cur_observe_sort), reward_agent_num):
-                    cur_observe_sort.append([0, 0, 0, 0, 0])
+                    cur_observe_sort.append([0, 0, 0, 0, 0, 0])
             cur_observe[2] = cur_observe_sort
 
             # todo
@@ -748,7 +762,7 @@ class GlobalAgentsEnv:
             from_ = list(cur_position[:])
             from_.append(0)
             if cur_observe_[0] != 0:
-                defend_reward = defendRewardSimpleV2(cur_observe_[1], cur_observe[3][0])
+                defend_reward = defendRewardSimpleV3(cur_observe_[1], cur_observe_[-1])
 
                 if self.defendLineTime == 0 and DEBUG:
                     if cur_agent_id in self.defendLines:
@@ -994,7 +1008,7 @@ class DefendAgentsEnv(gym.Env, ABC):
         super().__init__()
         self.global_agents_env = global_agents_env
         self.n_agent = defend_num
-        self.n_observation = 5 + 10 * reward_agent_num
+        self.n_observation = 5 + 12 * reward_agent_num
         if action_setting == "speed" and actinIndex == "all":
             self.n_action = 9
         else:
@@ -1029,7 +1043,7 @@ class AttackAgentsEnv(gym.Env, ABC):
         super().__init__()
         self.global_agents_env = global_agents_env
         self.n_agent = attack_num
-        self.n_observation = 3 + 10 * reward_agent_num
+        self.n_observation = 5 + 12 * reward_agent_num
         self.n_action = 25
 
     def step(self, actions):
