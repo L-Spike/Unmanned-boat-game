@@ -20,7 +20,7 @@ from model import DGN
 level = logging.DEBUG  # INFO 、WARNING、ERROR、CRITICAL
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(filename)s - %(funcName)s() - %(message)s',
-    level=logging.INFO)
+    level=logging.DEBUG)
 
 
 def velocityConversion(velocity, angle):
@@ -170,7 +170,6 @@ class SimpleAttackStrategy(AttackStrategy):
         super().__init__()
 
         self.max_oil = 5
-        self.threat_dis = attack_threat_dis
         self.max_threat_threshold = attack_threat_dis * threat_angle
         self.threat_angle_delta = threat_angle_delta
         self.small_angle = small_angle
@@ -193,7 +192,7 @@ class SimpleAttackStrategy(AttackStrategy):
         # [[cur_velocity, cur_angle], [[other_agent_id, s, phi, velocity, angle]...],
         # [[other_agent_id, s, phi, velocity, angle],...], dis]
         for agent_index, agent_info in enumerate(states):
-            min_threat_degree = self.max_threat_threshold
+            min_threat_degree = attack_threat_dis
             min_d = -1
             min_delta = -1
             min_threat_agent_info = None
@@ -216,10 +215,11 @@ class SimpleAttackStrategy(AttackStrategy):
                     # min_delta = delta
                     min_threat_agent_info = defend_agent_info
 
-            if min_threat_degree == self.max_threat_threshold:
+            if min_threat_degree == attack_threat_dis:
                 if action_setting == "speed" and actinIndex == "all":
                     # todo 更新绝对角度和速度
                     action = [max_velocity, changeAngleToConcrete(target_angle)]
+                    # print('target_angle', target_angle)
                 else:
                     # todo bug
                     action = self.getActionsSimple(angle1)
@@ -235,7 +235,7 @@ class SimpleAttackStrategy(AttackStrategy):
                     target_angle = changeAngleToConcrete(target_angle)
                     action = [max_velocity, target_angle]
                     # p: {agent_info}
-                    logging.debug(f"攻击方{agent_index} s:{s} phi:{phi} 进行躲避角度：{target_angle} ")
+                    # logging.debug(f"攻击方{agent_index} s:{s} phi:{phi} 进行躲避角度：{target_angle} ")
                 else:
                     action = self.getActionWithObstacles(s, phi, angle1, angle2, velocity1, velocity2, min_d,
                                                          min_delta)
@@ -257,7 +257,7 @@ class SimpleAttackStrategy(AttackStrategy):
         # dy = s * math.sin(phi) + delta_s * math.sin(angle2)
         # s_new = math.sqrt(math.pow(dx, 2) + math.pow(dy, 2))
         # target_angle = azimuthAngleWPBase(dx, dy)
-        if d < self.threat_dis / 4:
+        if d < attack_threat_dis / 4:
             oil = 1
         else:
             oil = 5
@@ -314,7 +314,7 @@ class SimpleAttackStrategy(AttackStrategy):
 
         threat_item = d * target_angle_delta
 
-        if d > self.threat_dis or target_angle_delta > threat_angle:
+        if d > attack_threat_dis or target_angle_delta > threat_angle:
             return self.max_threat_threshold, -1, -1
 
         return threat_item, d, target_angle_delta_with_symbol
