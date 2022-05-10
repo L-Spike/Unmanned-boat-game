@@ -330,6 +330,8 @@ class SimpleAttackStrategy(AttackStrategy):
         if 135 < project_angle < 225:
             return attack_threat_dis
 
+        else:
+            return s
 
 
 class DRLAttackStrategy(AttackStrategy):
