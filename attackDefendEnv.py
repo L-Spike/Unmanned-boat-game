@@ -481,7 +481,10 @@ def defendRewardSimpleV2(s, s_t):
 
 def defendRewardSimpleV3(s, s_t2):
     if s_t2 > ignore_radius:
-        return 1
+        if s > ignore_radius + 4:
+            return too_far_reward
+        else:
+            return defend_ok_reward
     else:
         if s > capture_dis:
             return -s + - (ignore_radius-s_t2)

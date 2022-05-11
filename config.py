@@ -40,6 +40,8 @@ target_position = [0, 0]
 # attack reward
 # attack_forbidden_reward = 10
 attack_succeed_reward = 50
+too_far_reward = -2
+defend_ok_reward = 1
 
 hidden_dim = 64
 max_step = 100
