@@ -479,9 +479,9 @@ def defendRewardSimpleV2(s, s_t):
         return capture_reward + (s_t - done_dis) * 2
 
 
-def defendRewardSimpleV3(s, s_t2):
+def defendRewardSimpleV3(s, s_t2, s_t):
     if s_t2 > ignore_radius:
-        if s > ignore_radius + 4:
+        if s_t > ignore_radius + 4:
             return too_far_reward
         else:
             return defend_ok_reward
@@ -765,7 +765,7 @@ class GlobalAgentsEnv:
             from_ = list(cur_position[:])
             from_.append(0)
             if cur_observe_[0] != 0:
-                defend_reward = defendRewardSimpleV3(cur_observe_[1], cur_observe_[-1])
+                defend_reward = defendRewardSimpleV3(cur_observe_[1], cur_observe_[-1],cur_observe[3][0])
 
                 if self.defendLineTime == 0 and DEBUG:
                     if cur_agent_id in self.defendLines:
