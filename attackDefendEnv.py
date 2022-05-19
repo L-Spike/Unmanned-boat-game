@@ -1,19 +1,15 @@
 # coding=utf-8
-import math
 import random
 from random import choice
-import sys
 from abc import ABC
-import numpy as np
 import pybullet as p
 import time
 import pybullet_data
 import gym
 import torch
-from gym import spaces
 
 import logging
-from config import *
+from utils import *
 
 from model import DGN
 
@@ -21,98 +17,6 @@ level = logging.DEBUG  # INFO 、WARNING、ERROR、CRITICAL
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(filename)s - %(funcName)s() - %(message)s',
     level=logging.INFO)
-
-
-def velocityConversion(velocity, angle):
-    velocityX = velocity * np.sin(angle * math.pi / 180)
-    velocityY = velocity * np.cos(angle * math.pi / 180)
-    velocityZ = 0
-    return [velocityX, velocityY, velocityZ]
-
-
-def velocityConversionVerse(speed):
-    vx, vy, vz = speed
-    velocity = math.sqrt(math.pow(vx, 2) + math.pow(vy, 2))
-    angle = azimuthAngleWPBase(vx, vy)
-    return velocity, angle
-
-
-# 计算方位角函数
-def azimuthAngleWP(pos1, pos2):
-    x1, y1 = pos1
-    x2, y2 = pos2
-    dx = x2 - x1
-    dy = y2 - y1
-    return azimuthAngleWPBase(dx, dy)
-
-
-def azimuthAngleWPBase(dx, dy):
-    angle = 0
-    if dx == 0:
-        # angle = math.pi / 2.0
-        # if y2 == y1:
-        #    angle = 0.0
-        # elif y2 < y1:
-        #    angle = 3.0 * math.pi / 2.0
-        angle = 0
-        if dy < 0:
-            angle = 3.0 * math.pi / 2.0
-    elif dx > 0 and dy > 0:
-        angle = math.atan(dx / dy)
-    elif dx > 0 > dy:
-        angle = math.pi / 2 + math.atan(-dy / dx)
-    elif dx < 0 and dy < 0:
-        angle = math.pi + math.atan(dx / dy)
-    elif dx < 0 < dy:
-        angle = 3.0 * math.pi / 2.0 + math.atan(dy / -dx)
-    return angle * 180 / math.pi
-
-
-def getDis(pos1, pos2):
-    dis = math.sqrt(math.pow(pos1[0] - pos2[0], 2) + math.pow(pos1[1] - pos2[1], 2))
-    return dis
-
-
-def transferRelativePosition(pos1, pos2, pos3):
-    s = getDis(pos1, pos2)
-    angle1 = azimuthAngleWP(pos1, pos2)
-    angle2 = azimuthAngleWP(pos1, pos3)
-    phi = azimuthAngleWA(angle2, angle1)
-    return s, phi
-
-
-def transferRelativePositionReverse(pos1, s, phi, pos3):
-    angle2 = azimuthAngleWP(pos1, pos3)
-    angle = (angle2 + phi) % 360
-    dx = s * math.sin(angle * math.pi / 180)
-    dy = s * math.cos(angle * math.pi / 180)
-    return [pos1[0] + dx, pos1[1] + dy]
-
-
-# s, phi = transferRelativePosition(cur_position, other_position, target_position)
-
-
-def transferRelativeAngle(angle1, pos1, pos2):
-    angle = azimuthAngleWP(pos1, pos2)
-    return azimuthAngleWA(angle, angle1)
-
-
-def azimuthAngleWA(baseAngle, anotherAngle):
-    angle = (anotherAngle - baseAngle) % 360
-    return angle
-
-
-def relativeAngle(baseAngle, anotherAngle):
-    angle = (anotherAngle - baseAngle) % 360
-    angle = angle if angle <= 180 else 360 - angle
-    return angle
-
-
-def relativeAngleWithSymbol(baseAngle, anotherAngle):
-    angle = (anotherAngle - baseAngle) % 360
-    angle = angle if angle <= 180 else -(360 - angle)
-    return angle
-
 
 actionIndex2OilRudder = [[0, 0], [0, 0.2 * max_turn_angle], [0, -0.2 * max_turn_angle], [0, max_turn_angle],
                          [0, -max_turn_angle],
@@ -149,20 +53,6 @@ class DefendStrategy:
 
     def generate_actions(self, state):
         pass
-
-
-# 简单的规则化进攻策略，采取部分可观测的环境设置
-# 每个agent有一个局部观测的state，嵌入到环境中
-def changeAngleToConcrete(angle):
-    b = angle % 45
-    a = angle // 45
-    if b == 0:
-        return angle
-    else:
-        if b > 22.5:
-            return (a + 1) * 45
-        else:
-            return a * 45
 
 
 class SimpleAttackStrategy(AttackStrategy):
@@ -375,123 +265,6 @@ class RandomDefendStrategy(DefendStrategy):
         return actions
 
 
-def drawCircle(radius, color, theta_delta):
-    from_angle = 0
-    to_angle = 20 / 180 * math.pi
-    froms = []
-    tos = []
-    while to_angle < 2 * math.pi:
-        from_point = [radius * math.sin(from_angle),
-                      radius * math.cos(from_angle), 0]
-        to_point = [radius * math.sin(to_angle), radius * math.cos(to_angle), 0]
-        from_angle = to_angle
-        to_angle += theta_delta
-        froms.append(from_point)
-        tos.append(to_point)
-    for f, t in zip(froms, tos):
-        p.addUserDebugLine(
-            lineFromXYZ=f,
-            lineToXYZ=t,
-            lineColorRGB=color,
-            lineWidth=3
-        )
-
-
-def transformState(state):
-    g_state = []
-    for cur_state in state:
-        g_cur_state = []
-        g_cur_state.extend(cur_state[0])
-        for j in range(reward_agent_num):
-            g_cur_state.extend(cur_state[1][j])
-        for k in range(reward_agent_num):
-            g_cur_state.extend(cur_state[2][k])
-        g_cur_state.extend(cur_state[-1])
-        g_state.append(g_cur_state)
-    return g_state
-
-
-def attackRewardDisAngle(dis, angle):
-    # math.pi*d
-    # phi - sin(phi)
-    angle = 360 - angle if angle > 180 else angle
-    angle = angle * math.pi / 180
-    change_item = turn_radius * abs(angle - math.sin(angle))
-    return -(dis + change_item) * attack_reward_factor
-
-
-def attackRewardDis(dis):
-    return -dis * attack_reward_factor
-
-
-def defendRewardDisAngle(dis, target_angle_delta):
-    change_item = turn_radius * target_angle_delta * math.pi / 180
-    reward_item = - (dis + change_item) * defend_reward_factor
-    return reward_item
-
-
-def defendRewardDisAngleDirect(dis, target_angle_delta):
-    change_item = turn_radius * target_angle_delta * math.pi / 180
-    reward_item = - (dis + change_item) * defend_reward_factor
-    return reward_item
-
-
-def defendReward(s, phi, angle1, angle2, velocity1, velocity2):
-    # # 没有危险，不用追捕
-    # if s > self.threat_dis and 130 < phi < 230:
-    #     return 0
-
-    # 计算相对角度，小于2倍的危险角度就认为可能发生碰撞
-    re_angle = relativeAngle(phi, angle1)
-    re_angle2 = relativeAngle(phi, angle2)
-    # theta = re_angle2 / 180 * math.sin(math.pi)
-    theta = re_angle2 / 180 * math.pi
-    sin_value = math.sin(theta) * velocity2 / (velocity1 + 0.01)
-
-    if sin_value > 1:
-        return not_to_catch_reward
-    alpha = math.atan(sin_value)
-    # if alpha < theta:(只有一个解)
-    delta = math.pi - alpha - theta
-    # delta = alpha - theta  (数形结合)
-    d = s / math.sin(delta) * math.sin(theta)
-    symbol = 1 if relativeAngleWithSymbol(phi, angle2) > 0 else -1
-    target_angle = phi + alpha * symbol
-    target_angle_delta = relativeAngle(target_angle, angle1)
-
-    if s > capture_dis:
-        return defendRewardDisAngle(d, target_angle_delta)
-    else:
-        return capture_reward
-
-
-def defendRewardSimple(s, phi, angle1, angle2, velocity1, velocity2):
-    if s > capture_dis:
-        return -s
-    else:
-        return capture_reward
-
-
-def defendRewardSimpleV2(s, s_t):
-    if s > capture_dis:
-        return -s
-    else:
-        return capture_reward + (s_t - done_dis) * 2
-
-
-def defendRewardSimpleV3(s, s_t2, s_t):
-    if s_t2 > ignore_radius:
-        if s_t > ignore_radius + 4:
-            return too_far_reward
-        else:
-            return defend_ok_reward
-    else:
-        if s > capture_dis:
-            return -s + - (ignore_radius-s_t2)
-        else:
-            return - (ignore_radius-s_t2)
-
-
 class GlobalAgentsEnv:
     def __init__(self, defend_stratedy, attack_strategy,
                  render: bool = False):
@@ -531,7 +304,6 @@ class GlobalAgentsEnv:
     def init_agent(self):
         # 将地面设置为光滑平面
         planeId = p.loadURDF("plane.urdf")
-        # logging.debug(f'planeID:{planeId}')
         p.changeDynamics(planeId, 0, lateralFriction=0, spinningFriction=0, rollingFriction=0)
 
         # # 相机设置
@@ -539,10 +311,10 @@ class GlobalAgentsEnv:
         #                              cameraTargetPosition=[-5, 5, 0.3])
 
         # 禁止圈
-        drawCircle(forbidden_radius, [249 / 255, 205 / 255, 173 / 255], theta_delta=30 / 180 * math.pi)
+        drawCircle(forbidden_radius, [249 / 255, 205 / 255, 173 / 255], theta_delta=30 / 180 * math.pi, p=p)
 
         # 结束圈
-        drawCircle(done_dis, [130 / 255, 32 / 255, 43 / 255], theta_delta=40 / 180 * math.pi)
+        drawCircle(done_dis, [130 / 255, 32 / 255, 43 / 255], theta_delta=40 / 180 * math.pi, p=p)
 
         # 设置agent的初始朝向
         agentStartOrientation = p.getQuaternionFromEuler([0, 0, 0])
@@ -765,7 +537,7 @@ class GlobalAgentsEnv:
             from_ = list(cur_position[:])
             from_.append(0)
             if cur_observe_[0] != 0:
-                defend_reward = defendRewardSimpleV3(cur_observe_[1], cur_observe_[-1],cur_observe[3][0])
+                defend_reward = defendRewardSimpleV3(cur_observe_[1], cur_observe_[-1], cur_observe[3][0])
 
                 if self.defendLineTime == 0 and DEBUG:
                     if cur_agent_id in self.defendLines:
