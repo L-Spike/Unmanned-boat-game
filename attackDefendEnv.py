@@ -121,7 +121,8 @@ class SimpleAttackStrategy(AttackStrategy):
                 angle2 = min_threat_agent_info[4]
                 if action_setting == "speed" and actinIndex == "all":
                     symbol = 1 if relativeAngleWithSymbol(target_angle, phi) > 0 else -1
-                    target_angle = (phi + (symbol * 135)) % 360
+                    # target_angle = (phi + (symbol * 135)) % 360
+                    target_angle = attackAction(s, phi, symbol)
                     target_angle = changeAngleToConcrete(target_angle)
                     action = [max_velocity, target_angle]
                     # p: {agent_info}

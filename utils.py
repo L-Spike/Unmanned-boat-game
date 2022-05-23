@@ -114,6 +114,7 @@ def changeAngleToConcrete(angle):
 
 def drawCircle(radius, color, theta_delta, p):
     from_angle = 0
+    from_angle = 0
     to_angle = 20 / 180 * math.pi
     froms = []
     tos = []
@@ -147,6 +148,25 @@ def transformState(state):
         g_state.append(g_cur_state)
     return g_state
 
+
+def attackAction(s, phi, symbol):
+    attack_epsilon = 0.9
+    if s > 2*attack_threat_dis / 3:
+        if np.random.rand() < attack_epsilon:
+            target_angle = (phi + (symbol * 45)) % 360
+        else:
+            target_angle = (phi + (-1 * symbol * 45)) % 360
+    elif s > attack_threat_dis / 3:
+        if np.random.rand() < attack_epsilon:
+            target_angle = (phi + (symbol * 90)) % 360
+        else:
+            target_angle = (phi + (-1 * symbol * 90)) % 360
+    else:
+        if np.random.rand() < attack_epsilon:
+            target_angle = (phi + (symbol * 135)) % 360
+        else:
+            target_angle = (phi + (-1 * symbol * 135)) % 360
+    return target_angle
 
 def attackRewardDisAngle(dis, angle):
     # math.pi*d
@@ -256,7 +276,7 @@ def mask_map(r1, r2, map_res, map_width):
     counter = 0
     for i in range(length):
         for j in range(length):
-            coord = [i * map_res - map_width/2, j * map_res - map_width/2]
+            coord = [i * map_res - map_width / 2, j * map_res - map_width / 2]
             dis = math.sqrt((coord[0] - t_coord[0]) ** 2 + (coord[1] - t_coord[1]) ** 2)
             if r2 > dis > r1:
                 map_mask[i][j] = 1
