@@ -177,13 +177,12 @@ while i_episode < n_episode:
         # 存储网络参数， 完成预测defend
         time_tuple = time.localtime(time.time())
         model_save_path = os.path.join(model_dirs,
-                                       "m_{}_{}_{}_{}_{}_{}_{}".format(n_episode, epsilon_factor, time_tuple[1],
-                                                                       time_tuple[2], time_tuple[3],
-                                                                       time_tuple[4], i_episode))
+                                       "{}v{}_{}_{}_{}_{}_{}".format(defend_num, attack_num, n_episode, epsilon_factor, time_tuple[1],
+                                                                       time_tuple[2], i_episode))
         torch.save(model.state_dict(), model_save_path)
 
 time_tuple = time.localtime(time.time())
 with open(os.path.join(data_dirs,
-                       "d_{}_{}_{}_{}_{}_{}".format(n_episode, epsilon_factor, time_tuple[1], time_tuple[2], time_tuple[3], time_tuple[4]) + ".pkl"),
+                       "d_{}v{}_{}_{}_{}_{}".format(defend_num, attack_num, n_episode, epsilon_factor, time_tuple[1], time_tuple[2]) + ".pkl"),
           "wb") as f:
     pickle.dump(evaluating_indicator, f, pickle.HIGHEST_PROTOCOL)
