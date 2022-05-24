@@ -4,8 +4,6 @@ DEBUG = False  # draw debug item
 action_setting = "speed"
 actinIndex = "all"
 
-use_forbidden_reward = False
-
 use_done = True
 use_angle = True  # only for attack
 
@@ -17,6 +15,7 @@ forbidden_reward = -10
 defend_succeed_reward = 50
 capture_reward = 1.5
 not_to_catch_reward = -1
+# punishment =
 attack_num = 8
 attack_radius = 15
 defend_num = 12
@@ -29,7 +28,7 @@ small_angle = 10
 attack_threat_dis = 1.5
 defend_threat_dis = 4
 capture_dis = 1.5
-reward_agent_num = 2
+reward_agent_num = 3
 max_velocity = 5
 max_turn_angle = 5
 communicate_radius = 100

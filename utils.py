@@ -251,6 +251,13 @@ def defendRewardSimpleV3(s, s_t2, s_t):
             return - (ignore_radius - s_t2)
 
 
+def defendRewardTotal(s_t2):
+    if s_t2 > ignore_radius:
+        return 0
+    else:
+        return -(ignore_radius - s_t2)
+
+
 def get_before(x, x_r, x_center, degree):
     angle1 = azimuthAngleWP(x_center, x)
     angle2 = azimuthAngleWP(x_center, x_r)
@@ -292,6 +299,7 @@ def update_records(records, map_pos, x, T):
     for i in range(n):
         other_dist = np.sqrt(np.square(x[i, 0] - map_pos[:, :, 0]) + np.square(x[i, 1] - map_pos[:, :, 1]))
         records[other_dist < r_s] = T
+
 
 def squd_norm(z):
     return np.add(np.square(z[:, :, 0]), np.square(z[:, :, 1]))

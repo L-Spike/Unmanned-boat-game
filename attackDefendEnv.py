@@ -568,10 +568,9 @@ class GlobalAgentsEnv:
             state[1].append(cur_observe)
 
         # 进入极端距离的负奖励
-        if use_forbidden_reward:
-            ex_threat_r = self.getForbiddenReward()
-            for i in range(defend_num):
-                reward[1][i] += ex_threat_r
+        ex_threat_r = self.getTotalReward()
+        for i in range(defend_num):
+            reward[1][i] += ex_threat_r
 
         # 修改reward
         self.state = state
@@ -614,12 +613,13 @@ class GlobalAgentsEnv:
                 return True
         return False
 
-    def getForbiddenReward(self):
+    def getTotalReward(self):
+        punish = 0
         for agent_id in self.attackAgentIds:
             a_position = self.agentCurPositions[self.id2Index[agent_id]]
-            if getDis(a_position, target_position) < forbidden_radius:
-                return forbidden_reward
-        return 0
+            dis = getDis(a_position, target_position)
+            punish += defendRewardTotal(dis)
+        return punish
 
     def getInfo(self):
         pass
