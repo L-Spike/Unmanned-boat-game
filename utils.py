@@ -2,6 +2,7 @@ import numpy as np
 import math
 import colorsys
 from config import *
+from DAF_config import r_s
 
 neg_inf = -9e+100
 
@@ -151,7 +152,7 @@ def transformState(state):
 
 def attackAction(s, phi, symbol):
     attack_epsilon = 0.9
-    if s > 2*attack_threat_dis / 3:
+    if s > 2 * attack_threat_dis / 3:
         if np.random.rand() < attack_epsilon:
             target_angle = (phi + (symbol * 45)) % 360
         else:
@@ -167,6 +168,7 @@ def attackAction(s, phi, symbol):
         else:
             target_angle = (phi + (-1 * symbol * 135)) % 360
     return target_angle
+
 
 def attackRewardDisAngle(dis, angle):
     # math.pi*d
@@ -283,6 +285,13 @@ def mask_map(r1, r2, map_res, map_width):
                 counter += 1
     return map_mask, counter
 
+
+def update_records(records, map_pos, x, T):
+    # other_dist = np.sqrt(np.square(x[r, 0] - map_pos[:, :, 0]) + np.square(x[r, 1] - map_pos[:, :, 1]))
+    n = x.shape[0]
+    for i in range(n):
+        other_dist = np.sqrt(np.square(x[i, 0] - map_pos[:, :, 0]) + np.square(x[i, 1] - map_pos[:, :, 1]))
+        records[other_dist < r_s] = T
 
 def squd_norm(z):
     return np.add(np.square(z[:, :, 0]), np.square(z[:, :, 1]))
