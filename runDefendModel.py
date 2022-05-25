@@ -2,7 +2,7 @@ import sys
 import os
 import argparse
 import torch
-from model import DGN
+from model import DGNDouble
 from attackDefendEnv import *
 from config import *
 
@@ -37,7 +37,10 @@ n_ant = env.n_agent
 observation_space = env.n_observation
 n_actions = env.n_action
 
-model = DGN(n_ant, observation_space, hidden_dim, n_actions)
+if use_double_dgn:
+    model = DGNDouble(n_ant, observation_space, hidden_dim, n_actions)
+else:
+    model = DGN(n_ant, observation_space, hidden_dim, n_actions)
 model.load_state_dict(torch.load(model_path, map_location="cpu"))
 
 while i_episode < run_n_episode:

@@ -14,6 +14,7 @@ import os
 import argparse
 
 from attackDefendEnv import *
+from model import DGNDouble
 
 # from config import epsilon
 
@@ -49,8 +50,14 @@ observation_space = env.n_observation
 n_actions = env.n_action
 buff = ReplayBuffer(capacity, observation_space, n_actions, n_ant)
 model_path = args.path
-model = DGN(n_ant, observation_space, hidden_dim, n_actions)
-model_tar = DGN(n_ant, observation_space, hidden_dim, n_actions)
+if use_double_dgn:
+    model = DGNDouble(n_ant, observation_space, hidden_dim, n_actions)
+    model_tar = DGNDouble(n_ant, observation_space, hidden_dim, n_actions)
+else:
+    model = DGN(n_ant, observation_space, hidden_dim, n_actions)
+    model_tar = DGN(n_ant, observation_space, hidden_dim, n_actions)
+
+
 model.load_state_dict(torch.load(model_path))
 model = model.cuda()
 model_tar.load_state_dict(torch.load(model_path))
