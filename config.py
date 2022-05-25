@@ -1,4 +1,5 @@
 cuda_device = "1"
+use_double_dgn = False
 
 DEBUG = False  # draw debug item
 action_setting = "speed"
@@ -16,9 +17,9 @@ defend_succeed_reward = 50
 capture_reward = 1.5
 not_to_catch_reward = -1
 # punishment =
-attack_num = 8
+attack_num = 20
 attack_radius = 15
-defend_num = 12
+defend_num = 30
 done_dis = 1
 forbidden_radius = 2
 defend_radius = 4

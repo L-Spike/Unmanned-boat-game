@@ -1,19 +1,14 @@
-import numpy as np
-import sys
-
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
-
-from model import DGN
-from buffer import ReplayBuffer
-import time
-import pickle
-import os
 import argparse
+import os
+import pickle
+
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
 
 from attackDefendEnv import *
+from model import DGNDouble
+from buffer import ReplayBuffer
 
 # from config import epsilon
 
@@ -47,8 +42,12 @@ n_ant = env.n_agent
 observation_space = env.n_observation
 n_actions = env.n_action
 buff = ReplayBuffer(capacity, observation_space, n_actions, n_ant)
-model = DGN(n_ant, observation_space, hidden_dim, n_actions)
-model_tar = DGN(n_ant, observation_space, hidden_dim, n_actions)
+if use_double_dgn:
+    model = DGNDouble(n_ant, observation_space, hidden_dim, n_actions)
+    model_tar = DGNDouble(n_ant, observation_space, hidden_dim, n_actions)
+else:
+    model = DGN(n_ant, observation_space, hidden_dim, n_actions)
+    model_tar = DGN(n_ant, observation_space, hidden_dim, n_actions)
 model = model.cuda()
 model_tar = model_tar.cuda()
 optimizer = optim.Adam(model.parameters(), lr=0.0001)

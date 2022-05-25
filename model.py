@@ -63,6 +63,22 @@ class DGN(nn.Module):
 		return q, a_w
 
 
+class DGNDouble(nn.Module):
+	def __init__(self, n_agent, num_inputs, hidden_dim, num_actions):
+		super(DGNDouble, self).__init__()
+
+		self.encoder = Encoder(num_inputs, hidden_dim)
+		self.att = AttModel(n_agent, hidden_dim, hidden_dim, hidden_dim)
+		self.att2 = AttModel(n_agent, hidden_dim, hidden_dim, hidden_dim)
+		self.q_net = Q_Net(hidden_dim, num_actions)
+
+	def forward(self, x, mask):
+		h1 = self.encoder(x)
+		h2, a_w = self.att(h1, mask)
+		h3, a_w2 = self.att(h2, mask)
+		q = self.q_net(h3)
+		return q, a_w
+
 
 
 
