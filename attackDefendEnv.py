@@ -580,7 +580,7 @@ class GlobalAgentsEnv:
 
         # 统一全局奖励
         if use_global_reward:
-            reward = self.getTotalRewardV2()
+            g_reward = self.getTotalRewardV2()
             for i in range(defend_num):
                 reward[1].append(reward)
         else:
