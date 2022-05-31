@@ -26,7 +26,7 @@ class Agents:
         agents_id[agent_num] = 1.
 
         if self.conf.last_action:
-            print(f"inputs:{len(inputs)} \n {inputs[1]} \n {len(inputs[1])} \n last_action:{last_action.shape}")
+            # print(f"inputs:{len(inputs)} \n {inputs[1]} \n {len(inputs[1])} \n last_action:{last_action.shape}")
             inputs = np.hstack((inputs, last_action))
         if self.conf.reuse_network:
             inputs = np.hstack((inputs, agents_id))
