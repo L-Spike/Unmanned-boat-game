@@ -93,7 +93,7 @@ class Config:
         self.replay_dir = './replay_buffer/'
 
         if self.cuda:
-            self.device = torch.device("cuda: 3" if torch.cuda.is_available() else "cpu")
+            self.device = torch.device("cuda: 1" if torch.cuda.is_available() else "cpu")
         else:
             self.device = torch.device("cpu")
 
