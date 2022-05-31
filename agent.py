@@ -38,8 +38,8 @@ class Agents:
         # get q value
         q_value, self.policy.eval_hidden[:, agent_num, :] = self.policy.eval_drqn_net(inputs, hidden_state)
         # choose action form q value
-        print(f'q_value:{q_value} shape:{q_value.shape}')
-        print(f'q_value:{availible_actions} shape:{availible_actions.shape}')
+        # print(f'q_value:{q_value} shape:{q_value.shape}')
+        # print(f'q_value:{availible_actions} shape:{availible_actions.shape}')
         q_value[availible_actions == 0.0] = -float("inf")
         if np.random.uniform() < epsilon:
             action = np.random.choice(availible_actions_idx)
