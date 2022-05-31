@@ -529,7 +529,9 @@ class GlobalAgentsEnv:
                             state_add_.extend([0, 0])
                         else:
                             state_add_.extend(state_seg[1:3])
-                    cur_observe[2].append([other_agent_id, dis, phi, velocity, angle, dis_t].extend(state_add_))
+                    tmp_ = [other_agent_id, dis, phi, velocity, angle, dis_t]
+                    tmp_.extend(state_add_)
+                    cur_observe[2].append(tmp_)
 
             # todo 排序依据
             print(f"aa:{cur_observe[2]}")
