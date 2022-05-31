@@ -818,6 +818,17 @@ class DefendAgentsEnv(gym.Env, ABC):
             self.n_action = 9
         else:
             self.n_action = 25
+        self.state = None
+        self.obs = None
+        self.adj = None
+        self.reward = None
+        self.done = None
+        self.env_info = {'state_shape': self.n_observation, 'obs_shape': self.n_observation, 'n_actions': self.n_action,
+                    'n_agents': defend_num, 'episode_limit': max_step}
+
+
+    def get_env_info(self):
+        return self.env_info
 
     def step(self, actions):
         actions_ = []
@@ -829,12 +840,20 @@ class DefendAgentsEnv(gym.Env, ABC):
                     actions_.append([max_velocity, action * 45])
             else:
                 actions_.append(actionIndex2OilRudder[action])
-        state, adj, reward, done = self.global_agents_env.apply_defend_action(actions_)
-        return state, adj, reward, done
+        self.state, self.adj, self.reward, self.done = self.global_agents_env.apply_defend_action(actions_)
+        return self.reward, self.done, self.env_info
+
+    def get_obs(self):
+        return self.state, self.adj
+
+    def get_state(self):
+        return self.state
+
+    def get_avail_agent_actions(self, agent_id):
+        return torch.tensor([1 for i in range(defend_num)])
 
     def reset(self):
-        state, adj = self.global_agents_env.defendReset()
-        return state, adj
+        self.state, self.adj = self.global_agents_env.defendReset()
 
     def render(self, mode='human'):
         pass

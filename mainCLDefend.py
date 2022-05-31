@@ -7,7 +7,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 
 from model import DGN
-from buffer import ReplayBuffer
+from RLUtils import ReplayBuffer
 import time
 import pickle
 import os

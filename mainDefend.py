@@ -8,7 +8,7 @@ import torch.optim as optim
 
 from attackDefendEnv import *
 from model import DGNDouble
-from buffer import ReplayBuffer
+from RLUtils import ReplayBuffer
 
 # from config import epsilon
 
