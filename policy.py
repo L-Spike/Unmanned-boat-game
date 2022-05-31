@@ -30,7 +30,7 @@ class QMIX:
         self.eval_qmix_net = QMIXNET(self.conf).to(self.device)
         self.target_qmix_net = QMIXNET(self.conf).to(self.device)
 
-        self.model_dir = self.conf.model_dir + self.conf.map_name
+        self.model_dir = self.conf.model_dir 
 
         if self.conf.load_model:
             if os.path.exists(self.model_dir + '/1_drqn_net_params.pkl'):
