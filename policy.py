@@ -167,8 +167,8 @@ class QMIX:
         return inputs, inputs_
 
     def init_hidden(self, episode_num):
-        self.eval_hidden = torch.zeros((episode_num, self.n_agents, self.conf.drqn_hidden_dim))
-        self.target_hidden = torch.zeros((episode_num, self.n_agents, self.conf.drqn_hidden_dim))
+        self.eval_hidden = torch.zeros((episode_num, self.n_agents, self.conf.drqn_hidden_dim)).to(self.device)
+        self.target_hidden = torch.zeros((episode_num, self.n_agents, self.conf.drqn_hidden_dim)).to(self.device)
 
     def save_model(self, train_step):
         num = str(train_step // self.conf.save_frequency)
