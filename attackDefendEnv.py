@@ -534,7 +534,7 @@ class GlobalAgentsEnv:
                     cur_observe[2].append(tmp_)
 
             # todo 排序依据
-            print(f"aa:{cur_observe[2]}")
+            # print(f"aa:{cur_observe[2]}")
             cur_observe_sort = sorted(cur_observe[2], key=lambda x: (x[1], x[2]))[:reward_agent_num]
             if len(cur_observe_sort) < reward_agent_num:
                 for i in range(len(cur_observe_sort), reward_agent_num):
