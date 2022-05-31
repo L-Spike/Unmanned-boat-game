@@ -76,7 +76,7 @@ class RolloutWorker:
 
         step = 0
         while not terminated and step < self.episode_limit:
-            obs = self.env.get_obs()
+            obs, _ = self.env.get_obs()
             state = self.env.get_state()
             actions, avail_actions, actions_onehot = [], [], []
             for agent_id in range(self.n_agents):
