@@ -507,12 +507,11 @@ class GlobalAgentsEnv:
                     dis_t = getDis(target_position, other_position)
                     cur_observe[1].append([other_agent_id, dis, phi, velocity, angle, dis_t])
 
-            cur_observe_sort = sorted(cur_observe[1], key=lambda x: x[1])[:reward_agent_num]
-            cur_observe_sort_ = sorted(cur_observe_sort, key=lambda x: x[2])
+            cur_observe_sort = sorted(cur_observe[1], key=lambda x: (x[1], x[2]))[:reward_agent_num]
             if len(cur_observe_sort) < reward_agent_num:
                 for i in range(len(cur_observe_sort), reward_agent_num):
                     cur_observe_sort.append([0, 0, 0, 0, 0, 0])
-            cur_observe[1] = cur_observe_sort_
+            cur_observe[1] = cur_observe_sort
 
             for other_agent_id in self.attackAgentIds:
                 other_position = self.agentCurPositions[self.id2Index[other_agent_id]]
