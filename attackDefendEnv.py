@@ -522,7 +522,14 @@ class GlobalAgentsEnv:
                     speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
                     velocity, angle = velocityConversionVerse(speed)
                     dis_t = getDis(target_position, other_position)
-                    cur_observe[2].append([other_agent_id, dis, phi, velocity, angle, dis_t])
+                    state_index = other_agent_id - defend_num - 1
+                    state_add_ = []
+                    for state_seg in state[0][state_index][2]:
+                        if state_seg[0] == cur_agent_id:
+                            state_add_.extend([0, 0])
+                        else:
+                            state_add_.extend(state_seg[1:3])
+                    cur_observe[2].append([other_agent_id, dis, phi, velocity, angle, dis_t].extend(state_add_))
 
             # todo 排序依据
             cur_observe_sort = sorted(cur_observe[2], key=lambda x: (x[1], x[2]))[:reward_agent_num]
@@ -784,7 +791,7 @@ class DefendAgentsEnv(gym.Env, ABC):
         super().__init__()
         self.global_agents_env = global_agents_env
         self.n_agent = defend_num
-        self.n_observation = 5 + 12 * reward_agent_num
+        self.n_observation = 5 + 12 * reward_agent_num + 2*reward_agent_num*reward_agent_num
         if action_setting == "speed" and actinIndex == "all":
             self.n_action = 9
         else:
