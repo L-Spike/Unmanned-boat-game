@@ -542,45 +542,52 @@ class GlobalAgentsEnv:
             cur_observe[2] = cur_observe_sort
 
             # todo
-            # 选择最近的攻击方智能体进行防守
-            cur_observe_ = cur_observe[2][0]
+            if not use_global_reward:
+                # 选择最近的攻击方智能体进行防守
+                cur_observe_ = cur_observe[2][0]
 
-            from_ = list(cur_position[:])
-            from_.append(0)
-            if cur_observe_[0] != 0:
-                defend_reward = defendRewardSimpleV3(cur_observe_[1], cur_observe_[-1], cur_observe[3][0])
+                from_ = list(cur_position[:])
+                from_.append(0)
+                if cur_observe_[0] != 0:
+                    defend_reward = defendRewardSimpleV3(cur_observe_[1], cur_observe_[-1], cur_observe[3][0])
 
-                if self.defendLineTime == 0 and DEBUG:
-                    if cur_agent_id in self.defendLines:
-                        p.removeUserDebugItem(self.defendLines[cur_agent_id])
-                    to_ = transferRelativePositionReverse(pos1=cur_position, s=cur_observe_[1], phi=cur_observe_[2],
-                                                          pos3=target_position)
-                    to_.append(0)
-                    self.defendLines[cur_agent_id] = p.addUserDebugLine(
-                        lineFromXYZ=from_,
-                        lineToXYZ=to_,
-                        lineColorRGB=[34 / 255, 34 / 255, 56 / 255],
-                        lineWidth=3
-                    )
-            else:
-                # 处理lazy？  未发现敌方
-                defend_reward = not_find_reward
-                if self.defendLineTime == 0 and DEBUG:
-                    if cur_agent_id in self.defendWords:
-                        p.removeUserDebugItem(self.defendWords[cur_agent_id])
-                    self.defendWords[cur_agent_id] = p.addUserDebugText(
-                        text="LAZY!",
-                        textPosition=from_,
-                        textColorRGB=[5 / 255, 39 / 255, 175 / 255],  # 5；G:39；B:175
-                        textSize=3
-                    )
-            reward[1].append(defend_reward)
+                    if self.defendLineTime == 0 and DEBUG:
+                        if cur_agent_id in self.defendLines:
+                            p.removeUserDebugItem(self.defendLines[cur_agent_id])
+                        to_ = transferRelativePositionReverse(pos1=cur_position, s=cur_observe_[1], phi=cur_observe_[2],
+                                                              pos3=target_position)
+                        to_.append(0)
+                        self.defendLines[cur_agent_id] = p.addUserDebugLine(
+                            lineFromXYZ=from_,
+                            lineToXYZ=to_,
+                            lineColorRGB=[34 / 255, 34 / 255, 56 / 255],
+                            lineWidth=3
+                        )
+                else:
+                    # 处理lazy？  未发现敌方
+                    defend_reward = not_find_reward
+                    if self.defendLineTime == 0 and DEBUG:
+                        if cur_agent_id in self.defendWords:
+                            p.removeUserDebugItem(self.defendWords[cur_agent_id])
+                        self.defendWords[cur_agent_id] = p.addUserDebugText(
+                            text="LAZY!",
+                            textPosition=from_,
+                            textColorRGB=[5 / 255, 39 / 255, 175 / 255],  # 5；G:39；B:175
+                            textSize=3
+                        )
+                reward[1].append(defend_reward)
             state[1].append(cur_observe)
 
-        # 进入极端距离的负奖励
-        ex_threat_r = self.getTotalReward()
-        for i in range(defend_num):
-            reward[1][i] += ex_threat_r
+        # 统一全局奖励
+        if use_global_reward:
+            reward = self.getTotalRewardV2()
+            for i in range(defend_num):
+                reward[1].append(reward)
+        else:
+            # 进入极端距离的负奖励
+            ex_threat_r = self.getTotalReward()
+            for i in range(defend_num):
+                reward[1][i] += ex_threat_r
 
         # 修改reward
         self.state = state
@@ -630,6 +637,19 @@ class GlobalAgentsEnv:
             dis = getDis(a_position, target_position)
             punish += defendRewardTotal(dis)
         return punish
+
+    def getTotalRewardV2(self):
+        reward = 0
+        for agent_id in self.attackAgentIds:
+            a_position = self.agentCurPositions[self.id2Index[agent_id]]
+            dis = getDis(a_position, target_position)
+            reward += defendRewardTotalV2(dis)
+
+        for agent_id in self.defendAgentIds:
+            a_position = self.agentCurPositions[self.id2Index[agent_id]]
+            dis = getDis(a_position, target_position)
+            reward += defendRewardTotalInd(dis)
+        return reward
 
     def getInfo(self):
         pass

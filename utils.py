@@ -258,6 +258,20 @@ def defendRewardTotal(s_t2):
         return -(ignore_radius - s_t2)
 
 
+def defendRewardTotalV2(s_t2):
+    if s_t2 > ignore_radius:
+        return defend_ok_reward
+    else:
+        return -(ignore_radius - s_t2)
+
+
+def defendRewardTotalInd(s_t):
+    if s_t > ignore_radius + 4:
+        return too_far_reward
+    else:
+        return 0
+
+
 def get_before(x, x_r, x_center, degree):
     angle1 = azimuthAngleWP(x_center, x)
     angle2 = azimuthAngleWP(x_center, x_r)
