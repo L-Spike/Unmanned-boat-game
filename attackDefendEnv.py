@@ -537,7 +537,7 @@ class GlobalAgentsEnv:
             cur_observe_sort = sorted(cur_observe[2], key=lambda x: (x[1], x[2]))[:reward_agent_num]
             if len(cur_observe_sort) < reward_agent_num:
                 for i in range(len(cur_observe_sort), reward_agent_num):
-                    cur_observe_sort.append([0, 0, 0, 0, 0, 0])
+                    cur_observe_sort.append([0 for i in range(6+2*reward_agent_num)])
             cur_observe[2] = cur_observe_sort
 
             # todo
@@ -813,7 +813,7 @@ class DefendAgentsEnv(gym.Env, ABC):
         super().__init__()
         self.global_agents_env = global_agents_env
         self.n_agent = defend_num
-        self.n_observation = 5 + 12 * reward_agent_num + reward_agent_num*reward_agent_num
+        self.n_observation = 5 + 12 * reward_agent_num + 2*reward_agent_num*reward_agent_num
         if action_setting == "speed" and actinIndex == "all":
             self.n_action = 9
         else:
