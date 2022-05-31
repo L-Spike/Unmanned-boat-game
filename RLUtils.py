@@ -87,7 +87,7 @@ class RolloutWorker:
                 # 生成动作的onehot编码
                 action_onehot = np.zeros(self.n_actions)
                 action_onehot[action] = 1
-                actions.append(action)
+                actions.append(action.cpu())
                 actions_onehot.append(action_onehot)
                 avail_actions.append(avail_action)
                 last_action[agent_id] = action_onehot
