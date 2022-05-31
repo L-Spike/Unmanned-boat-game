@@ -581,7 +581,7 @@ class GlobalAgentsEnv:
         if use_global_reward:
             g_reward = self.getTotalRewardV2()
             for i in range(defend_num):
-                reward[1].append(reward)
+                reward[1].append(g_reward)
         else:
             # 进入极端距离的负奖励
             ex_threat_r = self.getTotalReward()
