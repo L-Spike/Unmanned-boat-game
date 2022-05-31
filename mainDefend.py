@@ -101,7 +101,7 @@ while i_episode < n_episode:
             action.append(a)
 
         next_obs, next_adj, reward, terminated = env.step(action)
-        print(reward)
+        # print(reward)
         buff.add(np.array(obs), action, reward, np.array(next_obs), n_adj, next_adj, terminated)
         score += sum(reward)
         if terminated:
