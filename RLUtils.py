@@ -154,7 +154,11 @@ class RolloutWorker:
             terminated=terminate.copy()
         )
         for key in episode.keys():
-            episode[key] = np.array([episode[key]])
+            try:
+                episode[key] = np.array([episode[key]])
+            except:
+                print("EXXX\n")
+                print(episode[key])
         if not evaluate:
             self.start_epsilon = epsilon
         if evaluate and episode_num == self.conf.evaluate_epoch - 1 and self.conf.replay_dir != '':
