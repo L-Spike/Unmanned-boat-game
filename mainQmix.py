@@ -63,6 +63,7 @@ def train():
             # print(mini_batch['o'].shape)
             agents.train(mini_batch, train_steps)
             train_steps += 1
+            torch.cuda.empty_cache()
 
         if epoch % conf.evaluate_per_epoch == 0:
             win_rate, episode_reward = evaluate(rollout_worker)
@@ -71,7 +72,7 @@ def train():
             print("train epoch: {}, win rate: {}%, episode reward: {}".format(epoch, win_rate, episode_reward))
             # show_curves(win_rates, episode_rewards)
 
-        torch.cuda.empty_cache()
+
 
     show_curves(win_rates, episode_rewards)
 
