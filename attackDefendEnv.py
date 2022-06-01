@@ -703,7 +703,7 @@ class GlobalAgentsEnv:
             done = True
             reward = [defend_succeed_reward] * defend_num
 
-            return state, self.defend_adj, reward, done
+        return state, self.defend_adj, reward, done
 
     # 进攻方强化学习接口
     def apply_attack_action(self, attack_actions):
