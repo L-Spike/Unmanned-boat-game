@@ -51,6 +51,7 @@ class Agents:
         terminated = batch["terminated"]
         episode_num = terminated.shape[0]
         max_episode_len = 0
+        print(f"terminated[0]:{terminated[0]}")
         for episode_idx in range(episode_num):
             for transition_idx in range(self.episode_limit):
                 if terminated[episode_idx, transition_idx, 0] == 1:

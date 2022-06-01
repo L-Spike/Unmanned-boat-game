@@ -75,6 +75,7 @@ class RolloutWorker:
         #         epsilon = epsilon - self.anneal_epsilon if epsilon > self.end_epsilon else epsilon
 
         step = 0
+        print("startXXXXXXXXXXXXx")
         while not terminated and step < self.episode_limit:
             obs, _ = self.env.get_obs()
             state = self.env.get_state()
@@ -91,7 +92,7 @@ class RolloutWorker:
                 actions_onehot.append(action_onehot)
                 avail_actions.append(avail_action)
                 last_action[agent_id] = action_onehot
-
+            print("inXXXXXXXXXXXXx")
             # print("actions: ", actions)
             reward, terminated, info = self.env.step(actions)
             reward = reward[0]
