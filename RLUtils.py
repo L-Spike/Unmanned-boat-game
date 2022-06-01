@@ -210,8 +210,8 @@ class QmixReplayBuffer:
             self.buffers['r'][idxs] = episode_batch['r']
             self.buffers['o_'][idxs] = episode_batch['o_']
             self.buffers['s_'][idxs] = episode_batch['s_']
-            print(f"dd:{episode_batch['avail_u'][1][10]}")
-            print(f"\nff:{episode_batch['avail_u'][150][1]}")
+            # print(f"dd:{episode_batch['avail_u'][1][10]}")
+            # print(f"\nff:{episode_batch['avail_u'][150][1]}")
             self.buffers['avail_u'][idxs] = episode_batch['avail_u']
             self.buffers['avail_u_'][idxs] = episode_batch['avail_u_']
             self.buffers['u_onehot'][idxs] = episode_batch['u_onehot']
