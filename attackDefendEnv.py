@@ -537,7 +537,7 @@ class GlobalAgentsEnv:
             cur_observe_sort = sorted(cur_observe[2], key=lambda x: (x[1], x[2]))[:reward_agent_num]
             if len(cur_observe_sort) < reward_agent_num:
                 for i in range(len(cur_observe_sort), reward_agent_num):
-                    cur_observe_sort.append([0 for i in range(6+2*reward_agent_num)])
+                    cur_observe_sort.append([0 for i in range(6 + 2 * reward_agent_num)])
             cur_observe[2] = cur_observe_sort
 
             # todo
@@ -697,12 +697,11 @@ class GlobalAgentsEnv:
         state = transformState(state)
         done = self.getDone()
 
-        if use_done:
-            # todo
-            if done:
-                reward = [-defend_succeed_reward] * defend_num
-            elif self.cur_step == max_step:
-                reward = [defend_succeed_reward] * defend_num
+        if done:
+            reward = [-defend_succeed_reward] * defend_num
+        elif self.cur_step == max_step:
+            done = True
+            reward = [defend_succeed_reward] * defend_num
 
             return state, self.defend_adj, reward, done
 
@@ -813,7 +812,7 @@ class DefendAgentsEnv(gym.Env, ABC):
         super().__init__()
         self.global_agents_env = global_agents_env
         self.n_agent = defend_num
-        self.n_observation = 5 + 12 * reward_agent_num + 2*reward_agent_num*reward_agent_num
+        self.n_observation = 5 + 12 * reward_agent_num + 2 * reward_agent_num * reward_agent_num
         if action_setting == "speed" and actinIndex == "all":
             self.n_action = 9
         else:
@@ -823,9 +822,9 @@ class DefendAgentsEnv(gym.Env, ABC):
         self.adj = None
         self.reward = None
         self.done = None
-        self.env_info = {'state_shape': self.n_observation*defend_num, 'obs_shape': self.n_observation, 'n_actions': self.n_action,
-                    'n_agents': defend_num, 'episode_limit': max_step}
-
+        self.env_info = {'state_shape': self.n_observation * defend_num, 'obs_shape': self.n_observation,
+                         'n_actions': self.n_action,
+                         'n_agents': defend_num, 'episode_limit': max_step}
 
     def get_env_info(self):
         return self.env_info
@@ -844,7 +843,6 @@ class DefendAgentsEnv(gym.Env, ABC):
                     actions_.append([max_velocity, action * 45])
             else:
                 actions_.append(actionIndex2OilRudder[action])
-
 
         self.state, self.adj, self.reward, self.done = self.global_agents_env.apply_defend_action(actions_)
         return self.reward, self.done, self.env_info
