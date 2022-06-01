@@ -841,6 +841,10 @@ class DefendAgentsEnv(gym.Env, ABC):
             else:
                 actions_.append(actionIndex2OilRudder[action])
         print(f"actions:{actions_}")
+        for i in range(actions_):
+            if isinstance(actions_[i], torch.Tensor):
+                actions_[i] = actions_[i].item()
+
         self.state, self.adj, self.reward, self.done = self.global_agents_env.apply_defend_action(actions_)
         return self.reward, self.done, self.env_info
 
