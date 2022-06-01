@@ -20,7 +20,6 @@ class Agents:
 
     def choose_action(self, obs, last_action, agent_num, availible_actions, epsilon, evaluate=False):
         inputs = obs.copy()
-        # print(availible_actions)
         availible_actions_idx = np.nonzero(availible_actions)[0]
         agents_id = np.zeros(self.n_agents)
         agents_id[agent_num] = 1.
@@ -51,7 +50,6 @@ class Agents:
         terminated = batch["terminated"]
         episode_num = terminated.shape[0]
         max_episode_len = 0
-        print(f"terminated[0]:{terminated[0]}")
         for episode_idx in range(episode_num):
             for transition_idx in range(self.episode_limit):
                 if terminated[episode_idx, transition_idx, 0] == 1:
