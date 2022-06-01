@@ -95,7 +95,7 @@ class RolloutWorker:
             # print("actions: ", actions)
             reward, terminated, info = self.env.step(actions)
             reward = reward[0]
-            win_tag = True if terminated else False
+            win_tag = False if terminated and step < self.episode_limit else True
             o.append(obs)
             s.append(state)
             u.append(np.reshape(actions, [self.n_agents, 1]))

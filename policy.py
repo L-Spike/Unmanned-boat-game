@@ -129,6 +129,8 @@ class QMIX:
 
         # 得的q_eval和q_target是一个列表，列表里装着max_episode_len个数组，数组的的维度是(episode个数, n_agents，n_actions)
         # 把该列表转化成(batch_size, max_episode_len， n_agents，n_actions)的数组
+        print(f"max_episode_len:{max_episode_len}")
+        print(q_evals)
         q_evals = torch.stack(q_evals, dim=1)
         q_targets = torch.stack(q_targets, dim=1)
         return q_evals, q_targets
