@@ -823,7 +823,7 @@ class DefendAgentsEnv(gym.Env, ABC):
         self.adj = None
         self.reward = None
         self.done = None
-        self.env_info = {'state_shape': self.n_observation, 'obs_shape': self.n_observation, 'n_actions': self.n_action,
+        self.env_info = {'state_shape': self.n_observation*defend_num, 'obs_shape': self.n_observation, 'n_actions': self.n_action,
                     'n_agents': defend_num, 'episode_limit': max_step}
 
 
@@ -855,7 +855,7 @@ class DefendAgentsEnv(gym.Env, ABC):
     def get_state(self):
         state = []
         for t in self.state:
-            state.append(t)
+            state.extend(t)
         return state
 
     def get_avail_agent_actions(self, agent_id):
