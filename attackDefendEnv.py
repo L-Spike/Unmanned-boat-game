@@ -831,7 +831,7 @@ class DefendAgentsEnv(gym.Env, ABC):
         return self.env_info
 
     def step(self, actions):
-        print(f"actions:{actions}")
+        # print(f"actions:{actions}")
         for i in range(len(actions)):
             if isinstance(actions[i], torch.Tensor):
                 actions[i] = actions[i].item()

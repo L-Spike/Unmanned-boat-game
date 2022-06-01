@@ -158,7 +158,10 @@ class RolloutWorker:
                 episode[key] = np.array([episode[key]])
             except:
                 print("EXXX\n")
-                print(episode[key])
+                print(f"key:{key}")
+                print(len(episode[key]))
+                if isinstance(episode[key][0], list):
+                    print(len(episode[key][0]))
         if not evaluate:
             self.start_epsilon = epsilon
         if evaluate and episode_num == self.conf.evaluate_epoch - 1 and self.conf.replay_dir != '':
@@ -202,7 +205,9 @@ class QmixReplayBuffer:
             idxs = self._get_storage_idx(inc=batch_size)
             self.buffers['o'][idxs] = episode_batch['o']
             self.buffers['u'][idxs] = episode_batch['u']
+
             self.buffers['s'][idxs] = episode_batch['s']
+
             self.buffers['r'][idxs] = episode_batch['r']
             self.buffers['o_'][idxs] = episode_batch['o_']
             self.buffers['s_'][idxs] = episode_batch['s_']
