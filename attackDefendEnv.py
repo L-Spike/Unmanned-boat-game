@@ -853,7 +853,10 @@ class DefendAgentsEnv(gym.Env, ABC):
         return self.state, self.adj
 
     def get_state(self):
-        return self.state
+        state = []
+        for t in self.state:
+            state.append(t)
+        return state
 
     def get_avail_agent_actions(self, agent_id):
         return torch.tensor([1 for i in range(self.n_action)])

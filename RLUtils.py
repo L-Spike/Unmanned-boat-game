@@ -205,9 +205,8 @@ class QmixReplayBuffer:
             idxs = self._get_storage_idx(inc=batch_size)
             self.buffers['o'][idxs] = episode_batch['o']
             self.buffers['u'][idxs] = episode_batch['u']
-
+            # print(f"idxs:{idxs}")
             self.buffers['s'][idxs] = episode_batch['s']
-
             self.buffers['r'][idxs] = episode_batch['r']
             self.buffers['o_'][idxs] = episode_batch['o_']
             self.buffers['s_'][idxs] = episode_batch['s_']
