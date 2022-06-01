@@ -35,7 +35,7 @@ def train():
     episode_rewards = []
     train_steps = 0
     for epoch in range(conf.n_epochs):
-        # print("train epoch: %d" % epoch)
+        print("train epoch: %d" % epoch)
         episodes = []
         for episode_idx in range(conf.n_eposodes):
             episode, _, _ = rollout_worker.generate_episode(episode_idx)

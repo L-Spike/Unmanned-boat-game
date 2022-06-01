@@ -73,12 +73,12 @@ class Config:
         # train setting
         self.last_action = True  # 使用最新动作选择动作
         self.reuse_network = True  # 对所有智能体使用同一个网络
-        self.n_epochs = 100000  # 20000
+        self.n_epochs = 12000  # 20000
         self.evaluate_epoch = 20  # 20
         self.evaluate_per_epoch = 100  # 100
         self.batch_size = 32  # 32
         self.buffer_size = int(1e2)
-        self.save_frequency = 5000  # 5000
+        self.save_frequency = 1000  # 5000
         self.n_eposodes = 1  # 每个epoch有多少episodes
         self.train_steps = 1  # 每个epoch有多少train steps
         self.gamma = 0.99
@@ -112,7 +112,7 @@ class Config:
         # epsilon greedy
         self.start_epsilon = 1
         self.end_epsilon = 0.05
-        self.anneal_steps = 50000  # 50000
+        self.anneal_steps = 4000  # 50000
         self.anneal_epsilon = (self.start_epsilon - self.end_epsilon) / self.anneal_steps
         self.epsilon_anneal_scale = 'step'
 
