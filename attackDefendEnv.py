@@ -840,6 +840,7 @@ class DefendAgentsEnv(gym.Env, ABC):
                     actions_.append([max_velocity, action * 45])
             else:
                 actions_.append(actionIndex2OilRudder[action])
+        print(f"actions:{actions_}")
         self.state, self.adj, self.reward, self.done = self.global_agents_env.apply_defend_action(actions_)
         return self.reward, self.done, self.env_info
 

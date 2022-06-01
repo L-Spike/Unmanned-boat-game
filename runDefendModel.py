@@ -48,7 +48,8 @@ while i_episode < run_n_episode:
     steps = 0
     score = 0
     cur_result = 0
-    obs, adj = env.reset()
+    env.reset()
+    obs, adj = env.get_obs()
     while steps < max_step:
         steps += 1
         action = []
@@ -59,7 +60,8 @@ while i_episode < run_n_episode:
             a = q[i].argmax().item()
             action.append(a)
 
-        next_obs, next_adj, reward, terminated = env.step(action)
+        reward, terminated, _ = env.step(action)
+        next_obs, next_adj = env.get_obs()
         print(reward)
         # print(reward)
         if terminated:
