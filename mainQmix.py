@@ -71,6 +71,8 @@ def train():
             print("train epoch: {}, win rate: {}%, episode reward: {}".format(epoch, win_rate, episode_reward))
             # show_curves(win_rates, episode_rewards)
 
+        torch.cuda.empty_cache()
+
     show_curves(win_rates, episode_rewards)
 
 
