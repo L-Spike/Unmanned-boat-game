@@ -859,7 +859,7 @@ class DefendAgentsEnv(gym.Env, ABC):
         return state
 
     def get_avail_agent_actions(self, agent_id):
-        return torch.tensor([1 for i in range(self.n_action)])
+        return [1 for i in range(self.n_action)]
 
     def reset(self):
         self.state, self.adj = self.global_agents_env.defendReset()
