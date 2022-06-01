@@ -831,6 +831,10 @@ class DefendAgentsEnv(gym.Env, ABC):
         return self.env_info
 
     def step(self, actions):
+        print(f"actions:{actions}")
+        for i in range(len(actions)):
+            if isinstance(actions[i], torch.Tensor):
+                actions[i] = actions[i].item()
         actions_ = []
         for action in actions:
             if action_setting == "speed" and actinIndex == "all":
@@ -840,10 +844,7 @@ class DefendAgentsEnv(gym.Env, ABC):
                     actions_.append([max_velocity, action * 45])
             else:
                 actions_.append(actionIndex2OilRudder[action])
-        print(f"actions:{actions_}")
-        for i in range(actions_):
-            if isinstance(actions_[i], torch.Tensor):
-                actions_[i] = actions_[i].item()
+
 
         self.state, self.adj, self.reward, self.done = self.global_agents_env.apply_defend_action(actions_)
         return self.reward, self.done, self.env_info
