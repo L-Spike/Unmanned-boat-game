@@ -75,7 +75,7 @@ class QMIX:
 
         s, s_, u, r, avail_u, avail_u_, terminated = batch['s'], batch['s_'], batch['u'], batch['r'], \
                                                     batch['avail_u'], batch['avail_u_'], batch['terminated']
-        mask = 1 - batch['padded'].float()  # 把填充经验的TD-error置0，防止影响学习
+        mask = 1 - batch['padded']  # 把填充经验的TD-error置0，防止影响学习
 
         # 得到每个agent对应的Q值，维度为(episode个数, max_episode_len， n_agents， n_actions)
         q_evals, q_targets = self.get_q_values(batch, max_episode_len)
