@@ -1,6 +1,8 @@
 import torch
 import os
 from model import DRQN, QMIXNET
+
+
 # import sys
 # sys.setrecursionlimit(100000) #例如这里设置为十万
 
@@ -80,7 +82,7 @@ class QMIX:
         batch = batch_copy
 
         s, s_, u, r, avail_u, avail_u_, terminated = batch['s'], batch['s_'], batch['u'], batch['r'], \
-                                                    batch['avail_u'], batch['avail_u_'], batch['terminated']
+                                                     batch['avail_u'], batch['avail_u_'], batch['terminated']
         mask = 1 - batch['padded'].float()  # 把填充经验的TD-error置0，防止影响学习
 
         # 得到每个agent对应的Q值，维度为(episode个数, max_episode_len， n_agents， n_actions)
@@ -110,16 +112,25 @@ class QMIX:
         td_error = (q_total_eval - targets.detach())
         mask_td_error = mask * td_error
 
-        loss = (mask_td_error**2).sum() / mask.sum()
+        loss = (mask_td_error ** 2).sum() / mask.sum()
         self.optimizer.zero_grad()
         loss.backward()
         torch.nn.utils.clip_grad_norm_(self.eval_parameters, self.conf.grad_norm_clip)
         self.optimizer.step()
         # print("learn_end:{}".format(torch.cuda.memory_allocated(0)))
 
-        if train_step > 0 and train_step % self.conf.update_target_params == 0:
-            self.target_drqn_net.load_state_dict(self.eval_drqn_net.state_dict())
-            self.target_qmix_net.load_state_dict(self.target_qmix_net.state_dict())
+        if not self.conf.use_soft_update:
+            if train_step > 0 and train_step % self.conf.update_target_params == 0 :
+                self.target_drqn_net.load_state_dict(self.eval_drqn_net.state_dict())
+                self.target_qmix_net.load_state_dict(self.eval_qmix_net.state_dict())
+        else:
+            with torch.no_grad():
+                for p_targ, p in zip(self.target_drqn_net.parameters(), self.eval_drqn_net.parameters()):
+                    p_targ.data.mul_(self.conf.tau)
+                    p_targ.data.add_((1 - self.conf.tau) * p.data)
+                for p_targ, p in zip(self.target_qmix_net.parameters(), self.eval_qmix_net.parameters()):
+                    p_targ.data.mul_(self.conf.tau)
+                    p_targ.data.add_((1 - self.conf.tau) * p.data)
 
     def get_q_values(self, batch, max_episode_len):
         episode_num = batch['o'].shape[0]
@@ -130,7 +141,7 @@ class QMIX:
             inputs, inputs_ = self._get_inputs(batch, transition_idx)  # 给obs加last_action、agent_id
             # inputs = inputs.to(self.device)  # [batch_size*n_agents, obs_shape+n_agents+n_actions]
             # inputs_ = inputs_.to(self.device)
-            inputs = inputs.cuda()# [batch_size*n_agents, obs_shape+n_agents+n_actions]
+            inputs = inputs.cuda()  # [batch_size*n_agents, obs_shape+n_agents+n_actions]
             inputs_ = inputs_.cuda()
             # print("input_:{}".format(torch.cuda.memory_allocated(0)))
 
@@ -140,7 +151,7 @@ class QMIX:
             q_eval, self.eval_hidden = self.eval_drqn_net(inputs, self.eval_hidden)  # (n_agents, n_actions)
             q_target, self.target_hidden = self.target_drqn_net(inputs_, self.target_hidden)
 
-            q_eval = q_eval.view(episode_num, self.n_agents, -1)  #(batch_size, n_agents, n_actions)
+            q_eval = q_eval.view(episode_num, self.n_agents, -1)  # (batch_size, n_agents, n_actions)
             q_target = q_target.view(episode_num, self.n_agents, -1)
             q_evals.append(q_eval)
             q_targets.append(q_target)
@@ -157,7 +168,8 @@ class QMIX:
 
     def _get_inputs(self, batch, transition_idx):
         o, o_, u_onehot = batch['o'][:, transition_idx], batch['o_'][:, transition_idx], batch[
-            'u_onehot'][:]  # u_onehot取全部，要用上一条
+                                                                                             'u_onehot'][
+                                                                                         :]  # u_onehot取全部，要用上一条
         episode_num = o.shape[0]  # batch_size
         inputs, inputs_ = [], []
         inputs.append(o)

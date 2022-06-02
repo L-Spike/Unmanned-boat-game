@@ -84,8 +84,12 @@ class Config:
         self.train_steps = 1  # 每个epoch有多少train steps
         self.gamma = 0.99
         self.grad_norm_clip = 10  # prevent gradient explosion
-        self.update_target_params = 1  # 200
-        self.result_dir = './results/'
+        self.update_target_params = 200  # 200
+
+        self.use_soft_update = True
+        self.tau = 0.98
+
+        self.result_dir = f'./results_use_soft{self.use_soft_update}/'
 
         # test setting
         self.load_model = False
