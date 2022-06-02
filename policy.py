@@ -64,13 +64,13 @@ class QMIX:
         train_step: step record for updating target network parameters
         """
         episode_num = batch['o'].shape[0]
-        print("init_h_1:{}".format(torch.cuda.memory_allocated(0)))
+        # print("init_h_1:{}".format(torch.cuda.memory_allocated(0)))
         self.init_hidden(episode_num)
-        print("init_h_2:{}".format(torch.cuda.memory_allocated(0)))
+        # print("init_h_2:{}".format(torch.cuda.memory_allocated(0)))
 
         # change！
         batch_copy = {}
-
+        print("3:{}".format(torch.cuda.memory_allocated(0)))
         for key in batch.keys():
             # batch_copy[key] = torch.Tensor(batch[key]/)
             if key == 'u':
@@ -84,6 +84,7 @@ class QMIX:
         mask = 1 - batch['padded'].float()  # 把填充经验的TD-error置0，防止影响学习
 
         # 得到每个agent对应的Q值，维度为(episode个数, max_episode_len， n_agents， n_actions)
+        print("4:{}".format(torch.cuda.memory_allocated(0)))
         q_evals, q_targets = self.get_q_values(batch, max_episode_len)
         print("5:{}".format(torch.cuda.memory_allocated(0)))
         s = s.cuda()

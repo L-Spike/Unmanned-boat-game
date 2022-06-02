@@ -61,9 +61,9 @@ def train():
         for train_step in range(conf.train_steps):
             mini_batch = buffer.sample(min(buffer.current_size, conf.batch_size))  # obs； (64, 200, 3, 42)
             # print(mini_batch['o'].shape)
-            print("1:{}".format(torch.cuda.memory_allocated(0)))
+            # print("1:{}".format(torch.cuda.memory_allocated(0)))
             agents.train(mini_batch, train_steps)
-            print("2:{}".format(torch.cuda.memory_allocated(0)))
+            # print("2:{}".format(torch.cuda.memory_allocated(0)))
             train_steps += 1
             gc.collect()
             torch.cuda.empty_cache()
