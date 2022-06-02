@@ -6,7 +6,6 @@ import pybullet as p
 import time
 import pybullet_data
 import gym
-import torch
 
 import logging
 from utils import *
@@ -391,9 +390,9 @@ class GlobalAgentsEnv:
     def defendReset(self):
         self.reset()
         self.updateStateReward()
-        d_state, _ = self.getDefendStateReward()
-        d_state = transformState(d_state)
-        return d_state, self.defend_adj
+        d_obs, _, state = self.getDefendStateReward()
+        d_obs = transformState(d_obs)
+        return d_obs, self.defend_adj, state
 
     # 以对象的方式设置防守和进攻策略
     def set_defend_stratedy(self, defend_stratedy: DefendStrategy):
@@ -419,7 +418,7 @@ class GlobalAgentsEnv:
             self.agentCurVelocities[self.id2Index[agent_id]] = velocity
 
     def updateStateReward(self):
-        state = [[], []]
+        state = [[], [], []]
         reward = [[], []]
 
         # 更新当前智能体位置和速度
@@ -428,19 +427,22 @@ class GlobalAgentsEnv:
         self.updateDefendAdj()
         self.updateAttackAdj()
 
+        global_state = []
+
         # 攻方的观测， 再此过程中得到奖励
         for cur_agent_id in self.attackAgentIds:
             cur_position = self.agentCurPositions[self.id2Index[cur_agent_id]]
             cur_speed = self.agentCurVelocities[self.id2Index[cur_agent_id]]
             cur_velocity, cur_angle = velocityConversionVerse(cur_speed)
 
-            # [[cur_velocity, cur_angle], [[ther_agent_id, s, phi,
             # velocity, angle]...], [[ther_agent_id, s, phi, velocity, angle],...], dis]
 
             cur_observe = [[cur_agent_id, cur_velocity, cur_angle], [], [], []]
             s = getDis(target_position, cur_position)
             phi = azimuthAngleWP(cur_position, target_position)
             cur_observe[3] = [s, phi]
+
+            global_state.extend([cur_agent_id, cur_velocity, cur_angle, s, phi])
 
             # calculate attack reward
             if use_angle:
@@ -451,15 +453,24 @@ class GlobalAgentsEnv:
 
             for other_agent_id in self.attackAgentIds:
                 if cur_agent_id == other_agent_id:
+                    # global_state_seg.extend([0,0])
                     continue
                 other_position = self.agentCurPositions[self.id2Index[cur_agent_id]]
                 dis = getDis(cur_position, other_position)
+
                 if dis < communicate_radius:
                     phi = azimuthAngleWP(cur_position, other_position)
                     speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
                     velocity, angle = velocityConversionVerse(speed)
                     dis_t = getDis(target_position, other_position)
                     cur_observe[1].append([other_agent_id, dis, phi, velocity, angle, dis_t])
+
+                # if need_global_state:
+                #     if dis >= communicate_radius:
+                #         phi = azimuthAngleWP(cur_position, other_position)
+                #         speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
+                #     global_state.extend([dis, phi])
+
 
             cur_observe_sort = sorted(cur_observe[1], key=lambda x: (x[1], x[2]))[:reward_agent_num]
             if len(cur_observe_sort) < reward_agent_num:
@@ -477,12 +488,19 @@ class GlobalAgentsEnv:
                     dis_t = getDis(target_position, other_position)
                     cur_observe[2].append([other_agent_id, dis, phi, velocity, angle, dis_t])
 
+                if need_global_state:
+                    if dis >= observe_radius:
+                        phi = azimuthAngleWP(cur_position, other_position)
+                    global_state.extend([other_agent_id, dis, phi])
+
             cur_observe_sort = sorted(cur_observe[2], key=lambda x: (x[1], x[2]))[:reward_agent_num]
             if len(cur_observe_sort) < reward_agent_num:
                 for i in range(len(cur_observe_sort), reward_agent_num):
                     cur_observe_sort.append([0, 0, 0, 0, 0, 0])
             cur_observe[2] = cur_observe_sort
             state[0].append(cur_observe)
+
+        state[2] = global_state
 
         # observe for defend
         self.defendLineTime = (self.defendLineTime + 1) % 100
@@ -619,8 +637,9 @@ class GlobalAgentsEnv:
 
     def getDefendStateReward(self):
         # state = self.transformDefendState(self.state[1])
-        state = self.state[1]
-        return state, self.reward[1]
+        state = self.state[2]
+        obs = self.state[1]
+        return obs, self.reward[1], state
 
     def getDone(self):
         for agent_id in self.attackAgentIds:
@@ -693,8 +712,8 @@ class GlobalAgentsEnv:
 
         self.updateStateReward()
 
-        state, reward = self.getDefendStateReward()
-        state = transformState(state)
+        obs, reward, state = self.getDefendStateReward()
+        obs = transformState(obs)
         done = self.getDone()
 
         if done:
@@ -703,13 +722,13 @@ class GlobalAgentsEnv:
             done = True
             reward = [defend_succeed_reward] * defend_num
 
-        return state, self.defend_adj, reward, done
+        return obs, self.defend_adj, reward, done, state
 
     # 进攻方强化学习接口
     def apply_attack_action(self, attack_actions):
 
         self.cur_step += 1
-        d_state, d_reward = self.getDefendStateReward()
+        d_state, d_reward, _ = self.getDefendStateReward()
         defend_actions = self.defend_stratedy.generate_actions(d_state)
         self.apply_defend_action_by_oil(defend_actions)
         self.apply_attack_action_by_oil(attack_actions)
@@ -822,7 +841,7 @@ class DefendAgentsEnv(gym.Env, ABC):
         self.adj = None
         self.reward = None
         self.done = None
-        self.env_info = {'state_shape': self.n_observation * defend_num, 'obs_shape': self.n_observation,
+        self.env_info = {'state_shape': (5 + defend_num * 3) * attack_num, 'obs_shape': self.n_observation,
                          'n_actions': self.n_action,
                          'n_agents': defend_num, 'episode_limit': max_step}
 
@@ -844,23 +863,20 @@ class DefendAgentsEnv(gym.Env, ABC):
             else:
                 actions_.append(actionIndex2OilRudder[action])
 
-        self.state, self.adj, self.reward, self.done = self.global_agents_env.apply_defend_action(actions_)
+        self.obs, self.adj, self.reward, self.done, self.state = self.global_agents_env.apply_defend_action(actions_)
         return self.reward, self.done, self.env_info
 
     def get_obs(self):
-        return self.state, self.adj
+        return self.obs, self.adj
 
     def get_state(self):
-        state = []
-        for t in self.state:
-            state.extend(t)
-        return state
+        return self.state
 
     def get_avail_agent_actions(self, agent_id):
         return [1 for i in range(self.n_action)]
 
     def reset(self):
-        self.state, self.adj = self.global_agents_env.defendReset()
+        self.obs, self.adj, self.state = self.global_agents_env.defendReset()
 
     def render(self, mode='human'):
         pass

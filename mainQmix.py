@@ -68,8 +68,6 @@ def train():
             agents.train(mini_batch, train_steps)
             # print("2:{}".format(torch.cuda.memory_allocated(0)))
             train_steps += 1
-            gc.collect()
-            torch.cuda.empty_cache()
 
         if epoch % conf.evaluate_per_epoch == 0:
             win_rate, episode_reward = evaluate(rollout_worker)

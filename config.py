@@ -1,6 +1,7 @@
 cuda_device = "1"
 use_double_dgn = True
 use_global_reward = True
+need_global_state = True
 
 DEBUG = False  # draw debug item
 action_setting = "speed"
@@ -77,13 +78,13 @@ class Config:
         self.evaluate_epoch = 20  # 20
         self.evaluate_per_epoch = 100  # 100
         self.batch_size = 32  # 32
-        self.buffer_size = int(1e2)
+        self.buffer_size = int(1e3)
         self.save_frequency = 1000  # 5000
         self.n_eposodes = 1  # 每个epoch有多少episodes
         self.train_steps = 1  # 每个epoch有多少train steps
         self.gamma = 0.99
         self.grad_norm_clip = 10  # prevent gradient explosion
-        self.update_target_params = 200  # 200
+        self.update_target_params = 1  # 200
         self.result_dir = './results/'
 
         # test setting
