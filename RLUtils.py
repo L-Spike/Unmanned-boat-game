@@ -212,6 +212,7 @@ class QmixReplayBuffer:
         idx = np.random.randint(0, self.current_size, batch_size)
         for key in self.buffers.keys():
             temp_buffer[key] = self.buffers[key][idx]
+            print(temp_buffer[key].shape)
         return temp_buffer
 
     def _get_storage_idx(self, inc=None):
