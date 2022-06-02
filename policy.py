@@ -75,6 +75,7 @@ class QMIX:
         #         batch[key] = torch.tensor(batch[key], dtype=torch.long)
         #     else:
         #         batch[key] = torch.tensor(batch[key], dtype=torch.float32)
+        batch = batch_copy
 
         s, s_, u, r, avail_u, avail_u_, terminated = batch['s'], batch['s_'], batch['u'], batch['r'], \
                                                     batch['avail_u'], batch['avail_u_'], batch['terminated']
