@@ -4,7 +4,7 @@ from attackDefendEnv import *
 from agent import Agents
 from RLUtils import RolloutWorker, QmixReplayBuffer
 import matplotlib.pyplot as plt
-
+import gc
 from config import Config
 
 conf = Config()
@@ -63,6 +63,7 @@ def train():
             # print(mini_batch['o'].shape)
             agents.train(mini_batch, train_steps)
             train_steps += 1
+            gc.collect()
             torch.cuda.empty_cache()
 
         if epoch % conf.evaluate_per_epoch == 0:
