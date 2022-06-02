@@ -87,14 +87,14 @@ def evaluate(rollout_worker):
     # print("="*15, " evaluating ", "="*15)
     win_num = 0
     episode_rewards = 0
-    print("3:{}".format(torch.cuda.memory_allocated(0)))
+    # print("3:{}".format(torch.cuda.memory_allocated(0)))
     with torch.no_grad():
         for epoch in range(conf.evaluate_epoch):
             _, episode_reward, win_tag = rollout_worker.generate_episode(epoch, evaluate=True)
             episode_rewards += episode_reward
             if win_tag:
                 win_num += 1
-    print("4:{}".format(torch.cuda.memory_allocated(0)))
+    # print("4:{}".format(torch.cuda.memory_allocated(0)))
     return win_num / conf.evaluate_epoch, episode_rewards / conf.evaluate_epoch
 
 

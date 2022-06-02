@@ -84,9 +84,9 @@ class QMIX:
         mask = 1 - batch['padded'].float()  # 把填充经验的TD-error置0，防止影响学习
 
         # 得到每个agent对应的Q值，维度为(episode个数, max_episode_len， n_agents， n_actions)
-        print("4:{}".format(torch.cuda.memory_allocated(0)))
+        # print("4:{}".format(torch.cuda.memory_allocated(0)))
         q_evals, q_targets = self.get_q_values(batch, max_episode_len)
-        print("5:{}".format(torch.cuda.memory_allocated(0)))
+        # print("5:{}".format(torch.cuda.memory_allocated(0)))
         s = s.cuda()
         u = u.cuda()
         r = r.cuda()
@@ -115,7 +115,7 @@ class QMIX:
         loss.backward()
         torch.nn.utils.clip_grad_norm_(self.eval_parameters, self.conf.grad_norm_clip)
         self.optimizer.step()
-        print("learn_end:{}".format(torch.cuda.memory_allocated(0)))
+        # print("learn_end:{}".format(torch.cuda.memory_allocated(0)))
 
         if train_step > 0 and train_step % self.conf.update_target_params == 0:
             self.target_drqn_net.load_state_dict(self.eval_drqn_net.state_dict())
@@ -124,7 +124,7 @@ class QMIX:
     def get_q_values(self, batch, max_episode_len):
         episode_num = batch['o'].shape[0]
         q_evals, q_targets = [], []
-        print("6:{}".format(torch.cuda.memory_allocated(0)))
+        # print("6:{}".format(torch.cuda.memory_allocated(0)))
         for transition_idx in range(max_episode_len):
             # print("input:{}".format(torch.cuda.memory_allocated(0)))
             inputs, inputs_ = self._get_inputs(batch, transition_idx)  # 给obs加last_action、agent_id
@@ -152,7 +152,7 @@ class QMIX:
         # 把该列表转化成(batch_size, max_episode_len， n_agents，n_actions)的数组
         q_evals = torch.stack(q_evals, dim=1)
         q_targets = torch.stack(q_targets, dim=1)
-        print("9:{}".format(torch.cuda.memory_allocated(0)))
+        # print("9:{}".format(torch.cuda.memory_allocated(0)))
         return q_evals, q_targets
 
     def _get_inputs(self, batch, transition_idx):
