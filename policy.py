@@ -64,7 +64,9 @@ class QMIX:
         train_step: step record for updating target network parameters
         """
         episode_num = batch['o'].shape[0]
+        print("init_h_1:{}".format(torch.cuda.memory_allocated(0)))
         self.init_hidden(episode_num)
+        print("init_h_2:{}".format(torch.cuda.memory_allocated(0)))
 
         # change！
         batch_copy = {}
@@ -98,10 +100,10 @@ class QMIX:
         q_targets[avail_u_ == 0.0] = -9999999
         q_targets = q_targets.max(dim=3)[0]
         # print("q_evals2 shape: ", q_evals.size()) # [batch_size, max_episode_len, n_agents]
-
+        print("q_vals1:{}".format(torch.cuda.memory_allocated(0)))
         q_total_eval = self.eval_qmix_net(q_evals, s)
         q_total_target = self.target_qmix_net(q_targets, s_)
-
+        print("q_vals2:{}".format(torch.cuda.memory_allocated(0)))
         targets = r + self.conf.gamma * q_total_target * (1 - terminated)
 
         td_error = (q_total_eval - targets.detach())
@@ -112,6 +114,7 @@ class QMIX:
         loss.backward()
         torch.nn.utils.clip_grad_norm_(self.eval_parameters, self.conf.grad_norm_clip)
         self.optimizer.step()
+        print("learn_end:{}".format(torch.cuda.memory_allocated(0)))
 
         if train_step > 0 and train_step % self.conf.update_target_params == 0:
             self.target_drqn_net.load_state_dict(self.eval_drqn_net.state_dict())
