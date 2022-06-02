@@ -83,12 +83,12 @@ class QMIX:
 
         # 得到每个agent对应的Q值，维度为(episode个数, max_episode_len， n_agents， n_actions)
         q_evals, q_targets = self.get_q_values(batch, max_episode_len)
-        s = torch.Tensor(s).cuda()
-        u = torch.Tensor(u).cuda()
-        r = torch.Tensor(r).cuda()
-        s_ = torch.Tensor(s_).cuda()
-        terminated = torch.Tensor(terminated).cuda()
-        mask = torch.Tensor(mask).cuda()
+        s = s.cuda()
+        u = u.cuda()
+        r = r.cuda()
+        s_ = s_.cuda()
+        terminated = terminated.cuda()
+        mask = mask.cuda()
 
         # 取每个agent动作对应的Q值，并且把最后不需要的一维去掉，因为最后一维只有一个值了
         # print("q_evals1 shape: ", q_evals.size()) #[batch_size, max_episode_len, n_agents, n_actions]
