@@ -70,7 +70,7 @@ class QMIX:
 
         # change！
         batch_copy = {}
-        print("3:{}".format(torch.cuda.memory_allocated(0)))
+        # print("3:{}".format(torch.cuda.memory_allocated(0)))
         for key in batch.keys():
             # batch_copy[key] = torch.Tensor(batch[key]/)
             if key == 'u':
@@ -93,7 +93,7 @@ class QMIX:
         s_ = s_.cuda()
         terminated = terminated.cuda()
         mask = mask.cuda()
-        print("6:{}".format(torch.cuda.memory_allocated(0)))
+        # print("6:{}".format(torch.cuda.memory_allocated(0)))
 
         # 取每个agent动作对应的Q值，并且把最后不需要的一维去掉，因为最后一维只有一个值了
         # print("q_evals1 shape: ", q_evals.size()) #[batch_size, max_episode_len, n_agents, n_actions]
@@ -101,10 +101,10 @@ class QMIX:
         q_targets[avail_u_ == 0.0] = -9999999
         q_targets = q_targets.max(dim=3)[0]
         # print("q_evals2 shape: ", q_evals.size()) # [batch_size, max_episode_len, n_agents]
-        print("q_vals1:{}".format(torch.cuda.memory_allocated(0)))
+        # print("q_vals1:{}".format(torch.cuda.memory_allocated(0)))
         q_total_eval = self.eval_qmix_net(q_evals, s)
         q_total_target = self.target_qmix_net(q_targets, s_)
-        print("q_vals2:{}".format(torch.cuda.memory_allocated(0)))
+        # print("q_vals2:{}".format(torch.cuda.memory_allocated(0)))
         targets = r + self.conf.gamma * q_total_target * (1 - terminated)
 
         td_error = (q_total_eval - targets.detach())
@@ -124,13 +124,17 @@ class QMIX:
     def get_q_values(self, batch, max_episode_len):
         episode_num = batch['o'].shape[0]
         q_evals, q_targets = [], []
+        print("6:{}".format(torch.cuda.memory_allocated(0)))
         for transition_idx in range(max_episode_len):
+            print("input:{}".format(torch.cuda.memory_allocated(0)))
             inputs, inputs_ = self._get_inputs(batch, transition_idx)  # 给obs加last_action、agent_id
             # inputs = inputs.to(self.device)  # [batch_size*n_agents, obs_shape+n_agents+n_actions]
             # inputs_ = inputs_.to(self.device)
             inputs = inputs.cuda()# [batch_size*n_agents, obs_shape+n_agents+n_actions]
             inputs_ = inputs_.cuda()
+            print("input_:{}".format(torch.cuda.memory_allocated(0)))
 
+            print("a:{}".format(torch.cuda.memory_allocated(0)))
             self.eval_hidden = self.eval_hidden.cuda()
             self.target_hidden = self.target_hidden.cuda()
             q_eval, self.eval_hidden = self.eval_drqn_net(inputs, self.eval_hidden)  # (n_agents, n_actions)
@@ -140,11 +144,13 @@ class QMIX:
             q_target = q_target.view(episode_num, self.n_agents, -1)
             q_evals.append(q_eval)
             q_targets.append(q_target)
+            print("b:{}".format(torch.cuda.memory_allocated(0)))
 
         # 得的q_eval和q_target是一个列表，列表里装着max_episode_len个数组，数组的的维度是(episode个数, n_agents，n_actions)
         # 把该列表转化成(batch_size, max_episode_len， n_agents，n_actions)的数组
         q_evals = torch.stack(q_evals, dim=1)
         q_targets = torch.stack(q_targets, dim=1)
+        print("9:{}".format(torch.cuda.memory_allocated(0)))
         return q_evals, q_targets
 
     def _get_inputs(self, batch, transition_idx):
