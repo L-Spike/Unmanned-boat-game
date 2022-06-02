@@ -70,11 +70,11 @@ class QMIX:
         batch_copy = {}
 
         for key in batch.keys():
-            batch_copy[key] = torch.Tensor(batch[key])
-        #     if key == 'u':
-        #         batch[key] = torch.tensor(batch[key], dtype=torch.long)
-        #     else:
-        #         batch[key] = torch.tensor(batch[key], dtype=torch.float32)
+            # batch_copy[key] = torch.Tensor(batch[key]/)
+            if key == 'u':
+                batch_copy[key] = torch.tensor(batch[key], dtype=torch.long)
+            else:
+                batch_copy[key] = torch.tensor(batch[key], dtype=torch.float32)
         batch = batch_copy
 
         s, s_, u, r, avail_u, avail_u_, terminated = batch['s'], batch['s_'], batch['u'], batch['r'], \
