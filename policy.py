@@ -65,11 +65,13 @@ class QMIX:
         """
         episode_num = batch['o'].shape[0]
         self.init_hidden(episode_num)
-        for key in batch.keys():
-            if key == 'u':
-                batch[key] = torch.tensor(batch[key], dtype=torch.long)
-            else:
-                batch[key] = torch.tensor(batch[key], dtype=torch.float32)
+
+        # change！
+        # for key in batch.keys():
+        #     if key == 'u':
+        #         batch[key] = torch.tensor(batch[key], dtype=torch.long)
+        #     else:
+        #         batch[key] = torch.tensor(batch[key], dtype=torch.float32)
 
         s, s_, u, r, avail_u, avail_u_, terminated = batch['s'], batch['s_'], batch['u'], batch['r'], \
                                                     batch['avail_u'], batch['avail_u_'], batch['terminated']
@@ -77,12 +79,12 @@ class QMIX:
 
         # 得到每个agent对应的Q值，维度为(episode个数, max_episode_len， n_agents， n_actions)
         q_evals, q_targets = self.get_q_values(batch, max_episode_len)
-        s = s.to(self.device)
-        u = u.to(self.device)
-        r = r.to(self.device)
-        s_ = s_.to(self.device)
-        terminated = terminated.to(self.device)
-        mask = mask.to(self.device)
+        s = torch.Tensor(s).cuda()
+        u = torch.Tensor(u).cuda()
+        r = torch.Tensor(r).cuda()
+        s_ = torch.Tensor(s_).cuda()
+        terminated = torch.Tensor(terminated).cuda()
+        mask = torch.Tensor(mask).cuda()
 
         # 取每个agent动作对应的Q值，并且把最后不需要的一维去掉，因为最后一维只有一个值了
         # print("q_evals1 shape: ", q_evals.size()) #[batch_size, max_episode_len, n_agents, n_actions]
@@ -114,11 +116,13 @@ class QMIX:
         q_evals, q_targets = [], []
         for transition_idx in range(max_episode_len):
             inputs, inputs_ = self._get_inputs(batch, transition_idx)  # 给obs加last_action、agent_id
-            inputs = inputs.to(self.device)  # [batch_size*n_agents, obs_shape+n_agents+n_actions]
-            inputs_ = inputs_.to(self.device)
+            # inputs = inputs.to(self.device)  # [batch_size*n_agents, obs_shape+n_agents+n_actions]
+            # inputs_ = inputs_.to(self.device)
+            inputs = inputs.cuda()# [batch_size*n_agents, obs_shape+n_agents+n_actions]
+            inputs_ = inputs_.cuda()
 
-            self.eval_hidden = self.eval_hidden.to(self.device)
-            self.target_hidden = self.target_hidden.to(self.device)
+            self.eval_hidden = self.eval_hidden.cuda()
+            self.target_hidden = self.target_hidden.cuda()
             q_eval, self.eval_hidden = self.eval_drqn_net(inputs, self.eval_hidden)  # (n_agents, n_actions)
             q_target, self.target_hidden = self.target_drqn_net(inputs_, self.target_hidden)
 
