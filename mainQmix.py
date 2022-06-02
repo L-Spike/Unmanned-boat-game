@@ -36,18 +36,21 @@ def train():
     train_steps = 0
     for epoch in range(conf.n_epochs):
         print("train epoch: %d" % epoch)
-        episodes = []
-        for episode_idx in range(conf.n_eposodes):
-            episode, _, _ = rollout_worker.generate_episode(episode_idx)
-            episodes.append(episode)
 
-        episode_batch = episodes[0]
-        episodes.pop(0)
-        for episode in episodes:
-            for key in episode_batch.keys():
-                episode_batch[key] = np.concatenate((episode_batch[key], episode[key]), axis=0)
+        with torch.no_grad():
+            episodes = []
+            for episode_idx in range(conf.n_eposodes):
 
-        buffer.store_episode(episode_batch)
+                    episode, _, _ = rollout_worker.generate_episode(episode_idx)
+                    episodes.append(episode)
+
+            episode_batch = episodes[0]
+            episodes.pop(0)
+            for episode in episodes:
+                for key in episode_batch.keys():
+                    episode_batch[key] = np.concatenate((episode_batch[key], episode[key]), axis=0)
+
+            buffer.store_episode(episode_batch)
         # print(episode_batch['o'].shape)  # (1, 200, 3, 42)
         # print(episode_batch['s'].shape)  # (1, 200, 61)
         # print(episode_batch['u'].shape)  # (1, 200, 3, 1)

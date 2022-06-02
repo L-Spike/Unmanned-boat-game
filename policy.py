@@ -144,6 +144,7 @@ class QMIX:
             q_target = q_target.view(episode_num, self.n_agents, -1)
             q_evals.append(q_eval)
             q_targets.append(q_target)
+            torch.cuda.empty_cache()
             # print("b:{}".format(torch.cuda.memory_allocated(0)))
 
         # 得的q_eval和q_target是一个列表，列表里装着max_episode_len个数组，数组的的维度是(episode个数, n_agents，n_actions)
