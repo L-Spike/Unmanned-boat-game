@@ -115,9 +115,9 @@ while i_episode < n_episode:
     episode_steps.append(steps)
 
     print(f"i_episode: {i_episode}")
-    print(f"score:{score}")
 
     if i_episode < 40:
+        print(f"score:{score}")
         continue
     loss_rollouts = []
     loss1_rollouts = []
@@ -168,7 +168,7 @@ while i_episode < n_episode:
 
     losses.append(np.mean(loss_rollouts))
     logging.debug(f"loss1: {np.mean(loss1_rollouts)}")
-    print(np.mean(loss1_rollouts))
+    print(f"loss:{np.mean(loss1_rollouts)}\t\tscore:{score}")
     logging.debug(f"loss2: {np.mean(loss2_rollouts)}")
     loss1s.append(np.mean(loss1_rollouts))
     loss2s.append(np.mean(loss2_rollouts))
