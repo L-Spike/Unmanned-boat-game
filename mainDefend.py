@@ -159,6 +159,7 @@ while i_episode < n_episode:
         loss_value = loss.item()
         loss1_value = loss1.item()
         loss2_value = loss2.item()
+        print(loss1_value)
         loss_rollouts.append(loss_value)
         loss1_rollouts.append(loss1_value)
         loss2_rollouts.append(loss2_value)
