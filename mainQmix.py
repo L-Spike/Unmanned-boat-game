@@ -54,6 +54,7 @@ def train():
             for episode_idx in range(conf.n_eposodes):
                 episode, cumulative_reward, _ = rollout_worker.generate_episode(episode_idx)
                 cumulative_rewards.append(cumulative_reward)
+                print(f"cumulative_reward:{cumulative_reward}")
                 episodes.append(episode)
 
             episode_batch = episodes[0]
@@ -79,6 +80,7 @@ def train():
             # print("1:{}".format(torch.cuda.memory_allocated(0)))
             loss = agents.train(mini_batch, train_steps)
             losses.append(loss)
+            print(f"loss:{loss}")
             # print("2:{}".format(torch.cuda.memory_allocated(0)))
             train_steps += 1
 
