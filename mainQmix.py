@@ -47,14 +47,12 @@ def train():
                             "episode_steps": episode_steps}
 
     for epoch in range(conf.n_epochs):
-        print("train epoch: %d" % epoch)
-
         with torch.no_grad():
             episodes = []
             for episode_idx in range(conf.n_eposodes):
                 episode, cumulative_reward, _ = rollout_worker.generate_episode(episode_idx)
                 cumulative_rewards.append(cumulative_reward)
-                print(f"cumulative_reward:{cumulative_reward}")
+
                 episodes.append(episode)
 
             episode_batch = episodes[0]
@@ -80,7 +78,7 @@ def train():
             # print("1:{}".format(torch.cuda.memory_allocated(0)))
             loss = agents.train(mini_batch, train_steps)
             losses.append(loss)
-            print(f"loss:{loss}")
+            print(f"i_episode:{epoch}\t\tloss:{loss}\t\tcumulative_reward:{cumulative_reward}")
             # print("2:{}".format(torch.cuda.memory_allocated(0)))
             train_steps += 1
 
