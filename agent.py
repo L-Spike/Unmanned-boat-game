@@ -65,8 +65,10 @@ class Agents:
             batch[key] = batch[key][:, :max_episode_len]
 
         # print("learn1:{}".format(torch.cuda.memory_allocated(0)))
-        self.policy.learn(batch, max_episode_len, train_step, epsilon)
+        loss_value = self.policy.learn(batch, max_episode_len, train_step, epsilon)
         # print("learn2:{}".format(torch.cuda.memory_allocated(0)))
         if train_step > 0 and train_step % self.conf.save_frequency == 0:
             self.policy.save_model(train_step)
+
+        return loss_value
 

@@ -19,9 +19,9 @@ defend_succeed_reward = 50
 capture_reward = 1.5
 not_to_catch_reward = -1
 # punishment =
-attack_num = 10
+attack_num = 2
 attack_radius = 15
-defend_num = 15
+defend_num = 3
 done_dis = 1
 forbidden_radius = 2
 defend_radius = 4
@@ -74,7 +74,7 @@ class Config:
         # train setting
         self.last_action = True  # 使用最新动作选择动作
         self.reuse_network = True  # 对所有智能体使用同一个网络
-        self.n_epochs = 12000  # 20000
+        self.n_epochs = 2000  # 20000
         self.evaluate_epoch = 20  # 20
         self.evaluate_per_epoch = 100  # 100
         self.batch_size = 32  # 32

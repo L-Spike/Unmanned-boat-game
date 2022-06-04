@@ -113,6 +113,7 @@ class QMIX:
         mask_td_error = mask * td_error
 
         loss = (mask_td_error ** 2).sum() / mask.sum()
+        loss_value = loss.item()
         self.optimizer.zero_grad()
         loss.backward()
         torch.nn.utils.clip_grad_norm_(self.eval_parameters, self.conf.grad_norm_clip)
@@ -131,6 +132,7 @@ class QMIX:
                 for p_targ, p in zip(self.target_qmix_net.parameters(), self.eval_qmix_net.parameters()):
                     p_targ.data.mul_(self.conf.tau)
                     p_targ.data.add_((1 - self.conf.tau) * p.data)
+        return loss_value
 
     def get_q_values(self, batch, max_episode_len):
         episode_num = batch['o'].shape[0]

@@ -6,6 +6,7 @@ from RLUtils import RolloutWorker, QmixReplayBuffer
 import matplotlib.pyplot as plt
 import gc
 from config import Config
+import pickle
 
 conf = Config()
 
@@ -34,15 +35,26 @@ def train():
     win_rates = []
     episode_rewards = []
     train_steps = 0
+
+    data_dirs = "qmix_data"
+    if not os.path.exists(data_dirs):
+        os.makedirs(data_dirs)
+
+    cumulative_rewards = []
+    losses = []
+    episode_steps = []
+    evaluating_indicator = {"Cumulative reward": cumulative_rewards, "losses": losses,
+                            "episode_steps": episode_steps}
+
     for epoch in range(conf.n_epochs):
         print("train epoch: %d" % epoch)
 
         with torch.no_grad():
             episodes = []
             for episode_idx in range(conf.n_eposodes):
-
-                    episode, _, _ = rollout_worker.generate_episode(episode_idx)
-                    episodes.append(episode)
+                episode, cumulative_reward, _ = rollout_worker.generate_episode(episode_idx)
+                cumulative_rewards.append(cumulative_reward)
+                episodes.append(episode)
 
             episode_batch = episodes[0]
             episodes.pop(0)
@@ -65,7 +77,8 @@ def train():
             mini_batch = buffer.sample(min(buffer.current_size, conf.batch_size))  # obs； (64, 200, 3, 42)
             # print(mini_batch['o'].shape)
             # print("1:{}".format(torch.cuda.memory_allocated(0)))
-            agents.train(mini_batch, train_steps)
+            loss = agents.train(mini_batch, train_steps)
+            losses.append(loss)
             # print("2:{}".format(torch.cuda.memory_allocated(0)))
             train_steps += 1
 
@@ -76,7 +89,13 @@ def train():
             print("train epoch: {}, win rate: {}%, episode reward: {}".format(epoch, win_rate, episode_reward))
             # show_curves(win_rates, episode_rewards)
 
-
+    time_tuple = time.localtime(time.time())
+    with open(os.path.join(data_dirs,
+                           "d_{}v{}_{}_{}_{}_{}_{}_{}".format(n_episode, defend_num, attack_num, conf.use_soft_update,
+                                                              time_tuple[1], time_tuple[2], time_tuple[3],
+                                                              time_tuple[4]) + ".pkl"),
+              "wb") as f:
+        pickle.dump(evaluating_indicator, f, pickle.HIGHEST_PROTOCOL)
 
     show_curves(win_rates, episode_rewards)
 
@@ -119,5 +138,3 @@ def show_curves(win_rates, episode_rewards):
 if __name__ == "__main__":
     if conf.train:
         train()
-
-
