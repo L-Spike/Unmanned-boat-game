@@ -112,9 +112,9 @@ class QMIX:
         td_error = (q_total_eval - targets.detach())
         mask_td_error = mask * td_error
         # print(f"\ntd_error{td_error[0][:5]}\n")
-        for i in range(td_error.shape[1]):
-            print(f"\ntderror:{td_error[0][i]}\n")
-            print(f"\nmask:{mask[0][i]}\n")
+        # for i in range(td_error.shape[1]):
+        #     print(f"\ntderror:{td_error[0][i]}\n")
+        #     print(f"\nmask:{mask[0][i]}\n")
         loss = (mask_td_error ** 2).sum() / mask.sum()
 
         loss_value = loss.item()
