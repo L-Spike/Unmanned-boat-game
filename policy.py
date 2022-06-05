@@ -126,6 +126,7 @@ class QMIX:
 
         if not self.conf.use_soft_update:
             if train_step > 0 and train_step % self.conf.update_target_params == 0 :
+                print("update net params\n")
                 self.target_drqn_net.load_state_dict(self.eval_drqn_net.state_dict())
                 self.target_qmix_net.load_state_dict(self.eval_qmix_net.state_dict())
         else:
