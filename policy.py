@@ -108,7 +108,7 @@ class QMIX:
         q_total_target = self.target_qmix_net(q_targets, s_)
         # print("q_vals2:{}".format(torch.cuda.memory_allocated(0)))
         targets = r + self.conf.gamma * q_total_target * (1 - terminated)
-        print(f"r:[{r[0][:5]} gamma:{epsilon}")
+        # print(f"r:[{r[0][:5]} gamma:{epsilon}")
 
         td_error = (q_total_eval - targets.detach())
         mask_td_error = mask * td_error

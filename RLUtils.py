@@ -106,6 +106,7 @@ class RolloutWorker:
             episode_reward += reward
             if self.conf.epsilon_anneal_scale == 'step':
                 epsilon = epsilon - self.anneal_epsilon if epsilon > self.end_epsilon else epsilon
+                print(f"epi{epsilon}")
 
         # 最后一个动作
         o.append(obs)
