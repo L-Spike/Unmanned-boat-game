@@ -437,12 +437,12 @@ class GlobalAgentsEnv:
 
             # velocity, angle]...], [[ther_agent_id, s, phi, velocity, angle],...], dis]
 
-            cur_observe = [[cur_agent_id, cur_velocity, cur_angle], [], [], []]
+            cur_observe = [[cur_agent_id, cur_velocity, cur_angle*math.pi/180], [], [], []]
             s = getDis(target_position, cur_position)
             phi = azimuthAngleWP(cur_position, target_position)
-            cur_observe[3] = [s, phi]
+            cur_observe[3] = [s, phi*math.pi/180]
 
-            global_state.extend([cur_agent_id, cur_velocity, cur_angle, s, phi])
+            global_state.extend([cur_agent_id, cur_velocity, cur_angle*math.pi/180, s, phi*math.pi/180])
 
             # calculate attack reward
             if use_angle:
@@ -463,14 +463,13 @@ class GlobalAgentsEnv:
                     speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
                     velocity, angle = velocityConversionVerse(speed)
                     dis_t = getDis(target_position, other_position)
-                    cur_observe[1].append([other_agent_id, dis, phi, velocity, angle, dis_t])
+                    cur_observe[1].append([other_agent_id, dis, phi*math.pi/180, velocity, angle*math.pi/180, dis_t])
 
                 # if need_global_state:
                 #     if dis >= communicate_radius:
                 #         phi = azimuthAngleWP(cur_position, other_position)
                 #         speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
                 #     global_state.extend([dis, phi])
-
 
             cur_observe_sort = sorted(cur_observe[1], key=lambda x: (x[1], x[2]))[:reward_agent_num]
             if len(cur_observe_sort) < reward_agent_num:
@@ -486,12 +485,13 @@ class GlobalAgentsEnv:
                     speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
                     velocity, angle = velocityConversionVerse(speed)
                     dis_t = getDis(target_position, other_position)
-                    cur_observe[2].append([other_agent_id, dis, phi, velocity, angle, dis_t])
+                    cur_observe[2].append([other_agent_id, dis, phi*math.pi/180, velocity, angle*math.pi/180, dis_t])
 
                 if need_global_state:
                     if dis >= observe_radius:
+                    if dis >= observe_radius:
                         phi = azimuthAngleWP(cur_position, other_position)
-                    global_state.extend([other_agent_id, dis, phi])
+                    global_state.extend([other_agent_id, dis, phi*math.pi/180])
 
             cur_observe_sort = sorted(cur_observe[2], key=lambda x: (x[1], x[2]))[:reward_agent_num]
             if len(cur_observe_sort) < reward_agent_num:
@@ -508,10 +508,10 @@ class GlobalAgentsEnv:
             cur_position = self.agentCurPositions[self.id2Index[cur_agent_id]]
             cur_speed = self.agentCurVelocities[self.id2Index[cur_agent_id]]
             cur_velocity, cur_angle = velocityConversionVerse(cur_speed)
-            cur_observe = [[cur_agent_id, cur_velocity, cur_angle], [], [], []]
+            cur_observe = [[cur_agent_id, cur_velocity, cur_angle*math.pi/180], [], [], []]
             s = getDis(target_position, cur_position)
             phi = azimuthAngleWP(cur_position, target_position)
-            cur_observe[3] = [s, phi]
+            cur_observe[3] = [s, phi*math.pi/180]
 
             for other_agent_id in self.defendAgentIds:
                 if cur_agent_id == other_agent_id:
@@ -523,7 +523,7 @@ class GlobalAgentsEnv:
                     speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
                     velocity, angle = velocityConversionVerse(speed)
                     dis_t = getDis(target_position, other_position)
-                    cur_observe[1].append([other_agent_id, dis, phi, velocity, angle, dis_t])
+                    cur_observe[1].append([other_agent_id, dis, phi*math.pi/180, velocity, angle*math.pi/180, dis_t])
 
             cur_observe_sort = sorted(cur_observe[1], key=lambda x: (x[1], x[2]))[:reward_agent_num]
             if len(cur_observe_sort) < reward_agent_num:
@@ -546,7 +546,7 @@ class GlobalAgentsEnv:
                             state_add_.extend([0, 0])
                         else:
                             state_add_.extend(state_seg[1:3])
-                    tmp_ = [other_agent_id, dis, phi, velocity, angle, dis_t]
+                    tmp_ = [other_agent_id, dis, phi*math.pi/180, velocity, angle*math.pi/180, dis_t]
                     tmp_.extend(state_add_)
                     cur_observe[2].append(tmp_)
 
