@@ -93,6 +93,7 @@ class RolloutWorker:
                 last_action[agent_id] = action_onehot
             reward, terminated, info = self.env.step(actions)
             reward = reward[0]
+            step += 1
             win_tag = False if terminated and step < self.episode_limit else True
             o.append(obs)
             s.append(state)
@@ -103,7 +104,6 @@ class RolloutWorker:
             terminate.append([terminated])
             padded.append([0.])
             episode_reward += reward
-            step += 1
             if self.conf.epsilon_anneal_scale == 'step':
                 epsilon = epsilon - self.anneal_epsilon if epsilon > self.end_epsilon else epsilon
 
@@ -160,7 +160,7 @@ class RolloutWorker:
             # self.env.close()
             pass
 
-        return episode, episode_reward, win_tag
+        return episode, episode_reward, step, win_tag
 
 
 class QmixReplayBuffer:
