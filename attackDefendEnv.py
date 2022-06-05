@@ -489,7 +489,6 @@ class GlobalAgentsEnv:
 
                 if need_global_state:
                     if dis >= observe_radius:
-                    if dis >= observe_radius:
                         phi = azimuthAngleWP(cur_position, other_position)
                     global_state.extend([other_agent_id, dis, phi*math.pi/180])
 
