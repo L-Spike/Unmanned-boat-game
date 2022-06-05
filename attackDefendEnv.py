@@ -88,15 +88,15 @@ class SimpleAttackStrategy(AttackStrategy):
             # logging.debug(f'agent_info: {agent_info}')
             velocity1 = agent_info[0][0]
             angle1 = agent_info[0][1]
-            target_angle = agent_info[-1][1]
+            target_angle = agent_info[-1][1]*180/math.pi
             # print(f"智能体数量:{len(agent_info[2])}")
             for defend_agent_info in agent_info[2]:
                 s = defend_agent_info[1]
-                phi = defend_agent_info[2]
+                phi = defend_agent_info[2]*180/math.pi
                 velocity2 = defend_agent_info[3]
-                angle2 = defend_agent_info[4]
+                angle2 = defend_agent_info[4]*180/math.pi
                 # threat_degree, d, delta = self.calThreatDegree(s, phi, angle1, angle2, velocity1, velocity2)
-                threat_degree = self.calThreatDegreeSimple(s, phi, agent_info[-1][0], agent_info[-1][1])
+                threat_degree = self.calThreatDegreeSimple(s, phi, agent_info[-1][0], agent_info[-1][1]*180/math.pi)
                 if min_threat_degree > threat_degree:
                     # 处理  标记
                     min_threat_degree = threat_degree
@@ -115,9 +115,9 @@ class SimpleAttackStrategy(AttackStrategy):
             else:
                 # 计算
                 s = min_threat_agent_info[1]
-                phi = min_threat_agent_info[2]
+                phi = min_threat_agent_info[2]*180/math.pi
                 velocity2 = min_threat_agent_info[3]
-                angle2 = min_threat_agent_info[4]
+                angle2 = min_threat_agent_info[4]*180/math.pi
                 if action_setting == "speed" and actinIndex == "all":
                     symbol = 1 if relativeAngleWithSymbol(target_angle, phi) > 0 else -1
                     # target_angle = (phi + (symbol * 135)) % 360
