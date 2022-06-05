@@ -108,7 +108,7 @@ def evaluate(rollout_worker):
     # print("3:{}".format(torch.cuda.memory_allocated(0)))
     with torch.no_grad():
         for epoch in range(conf.evaluate_epoch):
-            _, episode_reward, win_tag = rollout_worker.generate_episode(epoch, evaluate=True)
+            _, episode_reward, episode_step, win_tag = rollout_worker.generate_episode(epoch, evaluate=True)
             episode_rewards += episode_reward
             if win_tag:
                 win_num += 1
