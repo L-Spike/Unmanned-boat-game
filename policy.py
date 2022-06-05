@@ -111,8 +111,9 @@ class QMIX:
 
         td_error = (q_total_eval - targets.detach())
         mask_td_error = mask * td_error
-
+        print(f"\ntd_error{td_error}\n")
         loss = (mask_td_error ** 2).sum() / mask.sum()
+
         loss_value = loss.item()
         self.optimizer.zero_grad()
         loss.backward()
