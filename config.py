@@ -117,7 +117,7 @@ class Config:
         # epsilon greedy
         self.start_epsilon = 1
         self.end_epsilon = 0.05
-        self.anneal_steps = 4000  # 50000
+        self.anneal_steps = 100000  # 50000
         self.anneal_epsilon = (self.start_epsilon - self.end_epsilon) / self.anneal_steps
         self.epsilon_anneal_scale = 'step'
 
