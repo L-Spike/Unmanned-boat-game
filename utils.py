@@ -383,21 +383,12 @@ def fuse_record(cell_map, nbr, fail_list):
 
 
 def fuse_all_records(cell_map, fused_scan_record, fail_list):
-
-    num_agents = int(cell_map.shape[2]/2)
-    max_time = np.maximum(fused_scan_record[:, :, 0], cell_map[:, :, 0])
-    temp_fused = fused_scan_record[:, :, 1]
-    temp_fused[max_time != fused_scan_record[:, :, 0]] = 1
-    fused_scan_record[:, :, 1] = temp_fused
-    fused_scan_record[:, :, 0] = max_time
-
-    for i in range(2, num_agents * 2, 2):
-        if i/2 in fail_list:
+    num_agents = int(cell_map.shape[2] / 2)
+    for i in range(0, num_agents * 2, 2):
+        if i / 2 in fail_list:
             continue
         max_time = np.maximum(fused_scan_record[:, :, 0], cell_map[:, :, i])
-        temp_fused = fused_scan_record[:, :, 1]
-        temp_fused[max_time != fused_scan_record[:, :, 0]] = (i + 1.0) / 2.0
-        fused_scan_record[:, :, 1] = temp_fused
+        fused_scan_record[:, :, 1][max_time != fused_scan_record[:, :, 0]] = (i / 2) + 1
         fused_scan_record[:, :, 0] = max_time
 
     return fused_scan_record
@@ -410,5 +401,3 @@ def get_colors(num_colors):
                                         (90 + np.random.rand() * 10) / 100.)
         colors.append((r, g, b))
     return colors
-
-

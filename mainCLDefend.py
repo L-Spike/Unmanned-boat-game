@@ -93,7 +93,8 @@ while i_episode < n_episode:
             epsilon = 0.02
     i_episode += 1
     steps = 0
-    obs, adj = env.reset()
+    env.reset()
+    obs, adj = env.get_obs()
     score = 0
     while steps < max_step:
         steps += 1
@@ -112,7 +113,8 @@ while i_episode < n_episode:
                 a = q[i].argmax().item()
             action.append(a)
 
-        next_obs, next_adj, reward, terminated = env.step(action)
+        reward, terminated, _ = env.step(action)
+        next_obs, next_adj = env.get_obs()
         buff.add(np.array(obs), action, reward, np.array(next_obs), n_adj, next_adj, terminated)
         score += sum(reward)
         if terminated:
