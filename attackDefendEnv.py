@@ -88,15 +88,15 @@ class SimpleAttackStrategy(AttackStrategy):
             # logging.debug(f'agent_info: {agent_info}')
             velocity1 = agent_info[0][0]*max_velocity
             angle1 = agent_info[0][1]*360
-            target_angle = agent_info[-1][1]*180/math.pi*360
+            target_angle = agent_info[-1][1]*360
             # print(f"智能体数量:{len(agent_info[2])}")
             for defend_agent_info in agent_info[2]:
-                s = defend_agent_info[1]*max_dis
-                phi = defend_agent_info[2]*180/math.pi*360
-                velocity2 = defend_agent_info[3]*max_velocity
-                angle2 = defend_agent_info[4]*180/math.pi*360
+                s = defend_agent_info[0]*max_dis
+                phi = defend_agent_info[1]*360
+                velocity2 = defend_agent_info[2]*max_velocity
+                angle2 = defend_agent_info[3]*360
                 # threat_degree, d, delta = self.calThreatDegree(s, phi, angle1, angle2, velocity1, velocity2)
-                threat_degree = self.calThreatDegreeSimple(s, phi, agent_info[-1][0], agent_info[-1][1]*180/math.pi)
+                threat_degree = self.calThreatDegreeSimple(s, phi, agent_info[-1][0]*max_dis, agent_info[-1][1]*360)
                 if min_threat_degree > threat_degree:
                     # 处理  标记
                     min_threat_degree = threat_degree
@@ -114,10 +114,10 @@ class SimpleAttackStrategy(AttackStrategy):
                     action = self.getActionsSimple(angle1)
             else:
                 # 计算
-                s = min_threat_agent_info[1]*max_dis
-                phi = min_threat_agent_info[2]*180/math.pi*360
-                velocity2 = min_threat_agent_info[3]*max_velocity
-                angle2 = min_threat_agent_info[4]*180/math.pi*360
+                s = min_threat_agent_info[0]*max_dis
+                phi = min_threat_agent_info[1]*360
+                velocity2 = min_threat_agent_info[2]*max_velocity
+                angle2 = min_threat_agent_info[3]*360
                 if action_setting == "speed" and actinIndex == "all":
                     symbol = 1 if relativeAngleWithSymbol(target_angle, phi) > 0 else -1
                     # target_angle = (phi + (symbol * 135)) % 360
