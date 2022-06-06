@@ -140,6 +140,12 @@ class RULE:
             # print(self.cur_to_index)
             update_records(self.records, self.map_pos, self.x_1, T)
 
+
+            # 发生故障
+            # 规则（考虑通信？  不考虑通信？）
+            # DAF （                     ）
+
+           # 统计剩余面积（=0    <t）
             rem_map = sum(sum(np.logical_and(self.records[:, :] == 0, self.obs_map[:, :] == 1)))
             cumu_covg = (self.total_count - rem_map) / (self.total_count * 0.01)
             # for i in range(20):

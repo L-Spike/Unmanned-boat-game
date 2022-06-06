@@ -95,6 +95,8 @@ class QMIX:
         s_ = s_.cuda()
         terminated = terminated.cuda()
         mask = mask.cuda()
+        print("s:",s[0][5])
+        print("u:",u[0][5])
         # print("6:{}".format(torch.cuda.memory_allocated(0)))
 
         # 取每个agent动作对应的Q值，并且把最后不需要的一维去掉，因为最后一维只有一个值了
