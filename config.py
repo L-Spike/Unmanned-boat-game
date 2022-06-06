@@ -37,6 +37,7 @@ max_turn_angle = 5
 communicate_radius = 100
 observe_radius = 100
 ignore_radius = 10
+max_dis = 16
 target_position = [0, 0]
 
 # attack reward
