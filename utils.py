@@ -346,8 +346,10 @@ def action_func(z, d, c1):
     return p_h
 
 
-def update_individual_record(cell_map, map_pos, x, T, r_s):
+def update_individual_record(cell_map, map_pos, x, T, r_s, fail_list):
     for r in range(x.shape[0]):
+        if r in fail_list:
+            continue
         other_dist = np.sqrt(np.square(x[r, 0] - map_pos[:, :, 0]) + np.square(x[r, 1] - map_pos[:, :, 1]))
         temp_map = cell_map[:, :, 2 * r]
         temp_ind = cell_map[:, :, 2 * r + 1]
@@ -359,9 +361,15 @@ def update_individual_record(cell_map, map_pos, x, T, r_s):
     return cell_map
 
 
-def fuse_record(cell_map, nbr):
+def fuse_record(cell_map, nbr, fail_list):
+    # cell map 是全局的融合观测  事后分析存在（分析累计覆盖率）
+    #
     for i in range(1, nbr.shape[0]):
+        if i in fail_list:
+            continue
         for j in range(i):
+            if j in fail_list:
+                continue
             if nbr[i, j] == 1:
                 max_time = np.maximum(cell_map[:, :, 2 * i], cell_map[:, :, 2 * j])
                 temp_cell_i = cell_map[:, :, 2 * i + 1]
@@ -374,7 +382,9 @@ def fuse_record(cell_map, nbr):
     return cell_map
 
 
-def fuse_all_records(cell_map, num_agents, fused_scan_record):
+def fuse_all_records(cell_map, fused_scan_record, fail_list):
+
+    num_agents = int(cell_map.shape[2]/2)
     max_time = np.maximum(fused_scan_record[:, :, 0], cell_map[:, :, 0])
     temp_fused = fused_scan_record[:, :, 1]
     temp_fused[max_time != fused_scan_record[:, :, 0]] = 1
@@ -382,6 +392,8 @@ def fuse_all_records(cell_map, num_agents, fused_scan_record):
     fused_scan_record[:, :, 0] = max_time
 
     for i in range(2, num_agents * 2, 2):
+        if i/2 in fail_list:
+            continue
         max_time = np.maximum(fused_scan_record[:, :, 0], cell_map[:, :, i])
         temp_fused = fused_scan_record[:, :, 1]
         temp_fused[max_time != fused_scan_record[:, :, 0]] = (i + 1.0) / 2.0

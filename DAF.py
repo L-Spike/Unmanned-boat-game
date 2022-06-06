@@ -13,6 +13,7 @@ class DAF:
     def __init__(self):
         super(DAF, self).__init__()
 
+        self.fail_list = []
         self.defendId2index = {}
         self.id2Index = {}
         self.attackId2Index = {}
@@ -123,13 +124,13 @@ class DAF:
             T = counter * t_gap
 
             # 记录当前时间和看到的标记
-            self.cell_map = update_individual_record(self.cell_map, self.map_pos, self.x_1, T, r_s)
+            self.cell_map = update_individual_record(self.cell_map, self.map_pos, self.x_1, T, r_s, self.fail_list)
 
             if np.sum(nbr) > 0:
-                self.cell_map = fuse_record(self.cell_map, nbr)
+                self.cell_map = fuse_record(self.cell_map, nbr, self.fail_list)
 
             # fusing cell_map for calculations
-            self.fused_scan_record = fuse_all_records(self.cell_map, defend_num, self.fused_scan_record)
+            self.fused_scan_record = fuse_all_records(self.cell_map, self.fused_scan_record, self.fail_list)
 
             rem_map = sum(sum(np.logical_and(self.fused_scan_record[:, :, 0] == 0, self.obs_map[:, :] == 1)))
             # print((self.fused_scan_record[:, :, 0] == 0).shape)

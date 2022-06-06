@@ -490,7 +490,7 @@ class GlobalAgentsEnv:
                 if need_global_state:
                     if dis >= observe_radius:
                         phi = azimuthAngleWP(cur_position, other_position)
-                    global_state.extend([dis, phi*math.pi/180])
+                    global_state.extend([dis/max_dis, phi/360])
 
             cur_observe_sort = sorted(cur_observe[2], key=lambda x: (x[1], x[2]))[:reward_agent_num]
             if len(cur_observe_sort) < reward_agent_num:
