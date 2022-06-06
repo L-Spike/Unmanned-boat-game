@@ -490,7 +490,7 @@ class GlobalAgentsEnv:
                 if need_global_state:
                     if dis >= observe_radius:
                         phi = azimuthAngleWP(cur_position, other_position)
-                    global_state.extend([other_agent_id, dis, phi*math.pi/180])
+                    global_state.extend([dis, phi*math.pi/180])
 
             cur_observe_sort = sorted(cur_observe[2], key=lambda x: (x[1], x[2]))[:reward_agent_num]
             if len(cur_observe_sort) < reward_agent_num:
@@ -839,7 +839,7 @@ class DefendAgentsEnv(gym.Env, ABC):
         self.adj = None
         self.reward = None
         self.done = None
-        self.env_info = {'state_shape': (5 + defend_num * 3) * attack_num, 'obs_shape': self.n_observation,
+        self.env_info = {'state_shape': (4 + defend_num * 2) * attack_num, 'obs_shape': self.n_observation,
                          'n_actions': self.n_action,
                          'n_agents': defend_num, 'episode_limit': max_step}
 
