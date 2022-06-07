@@ -172,7 +172,6 @@ while i_episode < n_episode:
         loss2_value = loss2.item()
         losses.append(np.mean(loss_rollouts))
         logging.debug(f"loss1: {np.mean(loss1_rollouts)}")
-        print(f"i_episode: {i_episode}\t\tloss:{np.mean(loss1_rollouts)}\t\tscore:{score}")
         # logging.debug(f"loss2: {np.mean(loss2_rollouts)}")
         loss_rollouts.append(loss_value)
         loss1_rollouts.append(loss1_value)

@@ -57,6 +57,7 @@ capacity = 100000
 batch_size = 64
 n_epoch = 25
 epsilon = 0.9
+end_epsilon = 0.02  # 0.02 0.05
 epsilon_factor = 0.25
 score = 0
 lamb = 0.1

@@ -77,8 +77,8 @@ while i_episode < n_episode:
     # 900个 0.01
     if i_episode > 40:
         epsilon -= 0.001 * epsilon_factor
-        if epsilon < 0.02:
-            epsilon = 0.02
+        if epsilon < end_epsilon:
+            epsilon = end_epsilon
     i_episode += 1
     steps = 0
     env.reset()

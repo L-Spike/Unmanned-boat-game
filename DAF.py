@@ -13,6 +13,7 @@ class DAF:
     def __init__(self):
         super(DAF, self).__init__()
 
+        self.fail_time = None
         self.fail_list = []
         self.defendId2index = {}
         self.id2Index = {}
@@ -109,7 +110,7 @@ class DAF:
         run_flag = True
         while run_flag:
             u_d = np.zeros((defend_num, 2))  # control input for decentralizing
-            u_o = np.zeros((defend_num, 2))  # control input for obstacle avoidance
+            # u_o = np.zeros((defend_num, 2))  # control input for obstacle avoidance
 
             # calculating adjacency matrix
             dist_gap = get_gap(self.x_1)
@@ -132,7 +133,10 @@ class DAF:
             # fusing cell_map for calculations
             self.fused_scan_record = fuse_all_records(self.cell_map, self.fused_scan_record, self.fail_list)
 
-            rem_map = sum(sum(np.logical_and(self.fused_scan_record[:, :, 0] == 0, self.obs_map[:, :] == 1)))
+            if self.fail_list:
+                rem_map = sum(sum(np.logical_and(self.fused_scan_record[:, :, 0] <= self.fail_time, self.obs_map[:, :] == 1)))
+            else:
+                rem_map = sum(sum(np.logical_and(self.fused_scan_record[:, :, 0] == 0, self.obs_map[:, :] == 1)))
             # print((self.fused_scan_record[:, :, 0] == 0).shape)
             # print((self.obs_map[:, :] == 1).shape)
             # print('ab:', sum(sum(self.obs_map[:, :] == 1)), 'tt:', self.total_count)
@@ -158,7 +162,7 @@ class DAF:
                 for b in range(defend_num):
                     u_d[a, :] = u_d[a, :] + (self.x_1[b, :] - self.x_1[a, :]) * adj[a, b] / np.sqrt(efs + dist_2[a, b])
 
-            u = u_d + u_o + u_e
+            u = u_d + u_e
 
             # calculating the new position and velocity
             x = self.x_1 + self.v_1 * t_gap
@@ -274,10 +278,14 @@ class DAF:
             p.stepSimulation()
             time.sleep(DAF_config.time_to_render)
             # termination condition
-            if cumu_covg == 100:
-                print("100%!")
-                break
-            else:
-                counter += 1
+            # if cumu_covg == 100:
+            #     print("100%!")
+            #     break
+            # else:
+            if cumu_covg == 100 and not self.fail_list:
+                self.fail_list = [0]
+                self.fail_time = counter * t_gap
+
+            counter += 1
             if counter % 10 == 0:
                 print(cumu_covg)
