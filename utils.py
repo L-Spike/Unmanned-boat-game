@@ -307,14 +307,6 @@ def mask_map(r1, r2, map_res, map_width):
     return map_mask, counter
 
 
-def update_records(records, map_pos, x, T):
-    # other_dist = np.sqrt(np.square(x[r, 0] - map_pos[:, :, 0]) + np.square(x[r, 1] - map_pos[:, :, 1]))
-    n = x.shape[0]
-    for i in range(n):
-        other_dist = np.sqrt(np.square(x[i, 0] - map_pos[:, :, 0]) + np.square(x[i, 1] - map_pos[:, :, 1]))
-        records[other_dist < r_s] = T
-
-
 def squd_norm(z):
     return np.add(np.square(z[:, :, 0]), np.square(z[:, :, 1]))
 
@@ -346,7 +338,7 @@ def action_func(z, d, c1):
     return p_h
 
 
-def update_individual_record(cell_map, map_pos, x, T, r_s, fail_list):
+def update_individual_record(cell_map, map_pos, x, T, fail_list):
     for r in range(x.shape[0]):
         if r in fail_list:
             continue
@@ -357,8 +349,18 @@ def update_individual_record(cell_map, map_pos, x, T, r_s, fail_list):
         temp_ind[other_dist <= r_s] = r
         cell_map[:, :, 2 * r] = temp_map
         cell_map[:, :, 2 * r + 1] = temp_ind
-
     return cell_map
+
+
+def update_records(records, map_pos, x, T, fail_list):
+    # other_dist = np.sqrt(np.square(x[r, 0] - map_pos[:, :, 0]) + np.square(x[r, 1] - map_pos[:, :, 1]))
+    n = x.shape[0]
+    for i in range(n):
+        if i in fail_list:
+            continue
+        other_dist = np.sqrt(np.square(x[i, 0] - map_pos[:, :, 0]) + np.square(x[i, 1] - map_pos[:, :, 1]))
+        records[other_dist < r_s] = T
+    return records
 
 
 def fuse_record(cell_map, nbr, fail_list):
@@ -390,7 +392,14 @@ def fuse_all_records(cell_map, fused_scan_record, fail_list):
         max_time = np.maximum(fused_scan_record[:, :, 0], cell_map[:, :, i])
         fused_scan_record[:, :, 1][max_time != fused_scan_record[:, :, 0]] = (i / 2) + 1
         fused_scan_record[:, :, 0] = max_time
+    return fused_scan_record
 
+
+def fuse_all_records_rule(records, fused_scan_record):
+    num_agents = int(records.shape[2])
+    for i in range(num_agents):
+        max_time = np.maximum(fused_scan_record[:, :], records[:, :, i])
+        fused_scan_record[:, :] = max_time
     return fused_scan_record
 
 

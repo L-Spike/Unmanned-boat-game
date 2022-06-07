@@ -10,11 +10,15 @@ from utils import *
 from DAF_config import *
 import random
 
+import numpy as np
+import matplotlib.pyplot as plt
 
 class RULE:
     def __init__(self):
         super(RULE, self).__init__()
 
+        self.fail_list = []
+        self.fail_time = None
         self.defendId2index = {}
         self.id2Index = {}
         self.attackId2Index = {}
@@ -115,9 +119,14 @@ class RULE:
                 cur_v = self.v_1[i]
                 cur_x = self.x_1[i]
                 self.x_1[i] = cur_x + cur_v * t_gap
-                cur_to_point = self.t_points[i][self.cur_to_index[i]]
-                temp = cur_to_point - cur_x
-                a = max_a * (temp / math.sqrt(temp[0] ** 2 + temp[1] ** 2))
+                # a = None
+                if i in self.fail_list:
+                    a = - c3 * cur_v
+                else:
+                    cur_to_point = self.t_points[i][self.cur_to_index[i]]
+                    temp = cur_to_point - cur_x
+                    a = max_a * (temp / math.sqrt(temp[0] ** 2 + temp[1] ** 2))
+
                 cur_v = cur_v + (a * t_gap)
                 cur_v_scaler = np.sqrt(cur_v[0] ** 2 + cur_v[1] ** 2)
                 if cur_v_scaler > max_v:
@@ -138,14 +147,17 @@ class RULE:
                 if dis < arr_dis:
                     self.cur_to_index[i] = (self.cur_to_index[i] + 1) % 10
             # print(self.cur_to_index)
-            update_records(self.records, self.map_pos, self.x_1, T)
-
-
+            self.records = update_records(self.records, self.map_pos, self.x_1, T, self.fail_list)
+            # self.records = fuse_all_records_rule(self.records, self.fused_scan_record)
             # 发生故障
             # 规则（不考虑通信    累计覆盖率   顺势覆盖率）
             # DAF （考虑通信（能感知位置 （碰撞） ）     小          弱         ）
            # 统计剩余面积（=0    <t）
-            rem_map = sum(sum(np.logical_and(self.records[:, :] == 0, self.obs_map[:, :] == 1)))
+            if self.fail_list:
+                rem_map = sum(sum(np.logical_and(self.records[:, :] <= self.fail_time, self.obs_map[:, :] == 1)))
+            else:
+                rem_map = sum(sum(np.logical_and(self.records[:, :] == 0, self.obs_map[:, :] == 1)))
+
             cumu_covg = (self.total_count - rem_map) / (self.total_count * 0.01)
             # for i in range(20):
             p.stepSimulation()
@@ -155,9 +167,28 @@ class RULE:
             #     print("100%!")
             #     break
             # else:
-            #     counter += 1
+            if cumu_covg >= 98 and not self.fail_list:
+                self.fail_list = [0]
+                self.fail_time = counter * t_gap
+
             counter += 1
             if counter % 10 == 0:
+                plt.clf()  # 清除上一幅图像
+                confusion_matrix = self.records[:, :]
+                # self.recorads[self.obs_map == 1]
+                # rem_map = sum(sum(np.logical_and(self.records[:, :] <= self.fail_time, self.obs_map[:, :] == 1)))
+                plt.imshow(confusion_matrix, interpolation='nearest', cmap=plt.cm.Reds)
+
+                size_ = self.obs_map.shape[0]
+                # iters = np.reshape([[[i, j] for j in range(size_)] for i in range(size_)], (size_, 2))
+                # if counter %10 == 0:
+                #     for i in range(size_):
+                #         for j in range(size_):
+                #             if self.obs_map[i, j] != 1:
+                #                 plt.text(j, i, "x")
+                plt.colorbar()
+                plt.draw()
+                plt.pause(0.01)  # 暂停0.01秒
                 print(cumu_covg)
 
 

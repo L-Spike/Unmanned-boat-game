@@ -8,11 +8,15 @@ from utils import *
 from DAF_config import *
 import random
 
+import numpy as np
+import matplotlib.pyplot as plt
+
 
 class DAF:
     def __init__(self):
         super(DAF, self).__init__()
 
+        self.x_r_m = None
         self.fail_time = None
         self.fail_list = []
         self.defendId2index = {}
@@ -125,7 +129,7 @@ class DAF:
             T = counter * t_gap
 
             # 记录当前时间和看到的标记
-            self.cell_map = update_individual_record(self.cell_map, self.map_pos, self.x_1, T, r_s, self.fail_list)
+            self.cell_map = update_individual_record(self.cell_map, self.map_pos, self.x_1, T, self.fail_list)
 
             if np.sum(nbr) > 0:
                 self.cell_map = fuse_record(self.cell_map, nbr, self.fail_list)
@@ -134,7 +138,8 @@ class DAF:
             self.fused_scan_record = fuse_all_records(self.cell_map, self.fused_scan_record, self.fail_list)
 
             if self.fail_list:
-                rem_map = sum(sum(np.logical_and(self.fused_scan_record[:, :, 0] <= self.fail_time, self.obs_map[:, :] == 1)))
+                rem_map = sum(
+                    sum(np.logical_and(self.fused_scan_record[:, :, 0] <= self.fail_time, self.obs_map[:, :] == 1)))
             else:
                 rem_map = sum(sum(np.logical_and(self.fused_scan_record[:, :, 0] == 0, self.obs_map[:, :] == 1)))
             # print((self.fused_scan_record[:, :, 0] == 0).shape)
@@ -152,6 +157,9 @@ class DAF:
             # selfishness
             self.x_r_m = self.x_r
             for i in range(defend_num):
+                if i in self.fail_list:
+                    self.x_r_m[i] = self.x_1[i]
+                    continue
                 if self.x_r_b[i]:
                     self.x_r_m[i] = self.x_r_b[i][0]
 
@@ -159,10 +167,13 @@ class DAF:
 
             # decentering
             for a in range(defend_num):
+                if a in self.fail_list:
+                    continue
                 for b in range(defend_num):
                     u_d[a, :] = u_d[a, :] + (self.x_1[b, :] - self.x_1[a, :]) * adj[a, b] / np.sqrt(efs + dist_2[a, b])
 
             u = u_d + u_e
+            # print(f"u:{u}\nu_d:{u_d}\nd_e:{u_e}")
 
             # calculating the new position and velocity
             x = self.x_1 + self.v_1 * t_gap
@@ -186,6 +197,10 @@ class DAF:
                 goal_m_dist[s] = np.sqrt((x[s, 0] - self.x_r_m[s, 0]) ** 2 + (x[s, 1] - self.x_r_m[s, 1]) ** 2)
 
             for s in range(defend_num):
+
+                if s in self.fail_list:
+                    continue
+
                 obs_map_temp = np.empty_like(self.obs_map)
                 # todo
                 obs_map_temp[:] = self.obs_map
@@ -204,6 +219,8 @@ class DAF:
                     recalculate = 1
                 else:
                     for i in range(defend_num):
+                        if i in self.fail_list:
+                            continue
                         if nbr[s, i] == 1:
                             # s 和 i 的目标距离靠近
                             if np.sqrt(np.square(self.x_r[i, 0] - self.x_r[s, 0]) + np.square(
@@ -273,7 +290,6 @@ class DAF:
                 # print(agentId, position)
                 p.resetBasePositionAndOrientation(agentId, position, new_orientation)
                 # p.resetBaseVelocity(agentId, speed, [0, 0, 0])
-
             # for i in range(20):
             p.stepSimulation()
             time.sleep(DAF_config.time_to_render)
@@ -288,4 +304,10 @@ class DAF:
 
             counter += 1
             if counter % 10 == 0:
+                plt.clf()  # 清除上一幅图像
+                confusion_matrix = self.fused_scan_record[:, :, 0]
+                plt.imshow(confusion_matrix, interpolation='nearest', cmap=plt.cm.Reds)
+                plt.colorbar()
+                plt.draw()
+                plt.pause(0.01)  # 暂停0.01秒
                 print(cumu_covg)
