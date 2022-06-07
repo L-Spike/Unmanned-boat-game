@@ -2,6 +2,7 @@ cuda_device = "1"
 use_double_dgn = True
 use_global_reward = True
 need_global_state = True
+add_role = True
 
 DEBUG = False  # draw debug item
 action_setting = "speed"

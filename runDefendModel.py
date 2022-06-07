@@ -50,6 +50,12 @@ while i_episode < run_n_episode:
     cur_result = 0
     env.reset()
     obs, adj = env.get_obs()
+    if add_role:
+        for i in range(len(obs)):
+            if i % 3 == 0:
+                obs[i].extend([0, 1])
+            else:
+                obs[i].extend([1, 0])
     while steps < max_step:
         steps += 1
         action = []
@@ -62,6 +68,12 @@ while i_episode < run_n_episode:
 
         reward, terminated, _ = env.step(action)
         next_obs, next_adj = env.get_obs()
+        if add_role:
+            for i in range(len(obs)):
+                if i % 3 == 0:
+                    obs[i].extend([0, 1])
+                else:
+                    obs[i].extend([1, 0])
         print(reward)
         # print(reward)
         if terminated:

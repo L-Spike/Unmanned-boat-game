@@ -39,7 +39,7 @@ g_env = GlobalAgentsEnv(RandomDefendStrategy(),
 env = DefendAgentsEnv(g_env)
 
 n_ant = env.n_agent
-observation_space = env.n_observation
+observation_space = env.n_observation+2 if add_role else env.n_observation
 n_actions = env.n_action
 buff = ReplayBuffer(capacity, observation_space, n_actions, n_ant)
 if use_double_dgn:
@@ -83,6 +83,13 @@ while i_episode < n_episode:
     steps = 0
     env.reset()
     obs, adj = env.get_obs()
+    if add_role:
+        for i in range(len(obs)):
+            if i % 3 == 0:
+                obs[i].extend([0, 1])
+            else:
+                obs[i].extend([1, 0])
+
     score = 0
     while steps < max_step:
         steps += 1
@@ -103,6 +110,12 @@ while i_episode < n_episode:
 
         reward, terminated, _ = env.step(action)
         next_obs, next_adj = env.get_obs()
+        if add_role:
+            for i in range(len(obs)):
+                if i % 3 == 0:
+                    obs[i].extend([0, 1])
+                else:
+                    obs[i].extend([1, 0])
         # print(reward)
         buff.add(np.array(obs), action, reward, np.array(next_obs), n_adj, next_adj, terminated)
         score += sum(reward)
