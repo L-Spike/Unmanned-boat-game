@@ -35,7 +35,7 @@ class Agents:
         availible_actions = torch.tensor(availible_actions, dtype=torch.float32).unsqueeze(0).to(self.device)
 
         # get q value
-        print(f"input:{inputs[0].shape}")
+        # print(f"input:{inputs[0].shape}")
         # print(f"eval_net:{self.policy.}")
         q_value, self.policy.eval_hidden[:, agent_num, :] = self.policy.eval_drqn_net(inputs, hidden_state)
         # choose action form q value
