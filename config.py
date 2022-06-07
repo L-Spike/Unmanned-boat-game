@@ -3,6 +3,7 @@ use_double_dgn = True
 use_global_reward = True
 need_global_state = True
 add_role = True
+use_fix_obs = True
 
 DEBUG = False  # draw debug item
 action_setting = "speed"

@@ -418,7 +418,7 @@ class GlobalAgentsEnv:
             self.agentCurVelocities[self.id2Index[agent_id]] = velocity
 
     def updateStateReward(self):
-        state = [[], [], []]
+        state = [[], [], [], []]
         reward = [[], []]
 
         # 更新当前智能体位置和速度
@@ -428,6 +428,7 @@ class GlobalAgentsEnv:
         self.updateAttackAdj()
 
         global_state = []
+        fix_state = []
 
         # 攻方的观测， 再此过程中得到奖励
         for cur_agent_id in self.attackAgentIds:
@@ -512,6 +513,8 @@ class GlobalAgentsEnv:
             phi = azimuthAngleWP(cur_position, target_position)
             cur_observe[3] = [s/max_dis, phi/360]
 
+            fix_state.extend([cur_velocity/max_velocity, cur_angle/360, s/max_dis, phi/360])
+
             for other_agent_id in self.defendAgentIds:
                 if cur_agent_id == other_agent_id:
                     continue
@@ -523,6 +526,9 @@ class GlobalAgentsEnv:
                     velocity, angle = velocityConversionVerse(speed)
                     dis_t = getDis(target_position, other_position)
                     cur_observe[1].append([dis/max_dis, phi/360, velocity/max_velocity, angle/360, dis_t/max_dis])
+
+                    fix_state.extend([dis / max_dis, phi / 360, velocity / max_velocity, angle / 360, dis_t / max_dis])
+
             cur_observe_sort = sorted(cur_observe[1], key=lambda x: (x[1], x[2]))[:reward_agent_num]
             if len(cur_observe_sort) < reward_agent_num:
                 for i in range(len(cur_observe_sort), reward_agent_num):
@@ -547,6 +553,8 @@ class GlobalAgentsEnv:
                     tmp_ = [dis/max_dis, phi/360, velocity/max_velocity, angle/360, dis_t/max_dis]
                     tmp_.extend(state_add_)
                     cur_observe[2].append(tmp_)
+
+                    fix_state.extend([dis / max_dis, phi / 360, velocity / max_velocity, angle / 360, dis_t / max_dis])
 
             # todo 排序依据
             # print(f"aa:{cur_observe[2]}")
@@ -592,6 +600,7 @@ class GlobalAgentsEnv:
                         )
                 reward[1].append(defend_reward)
             state[1].append(cur_observe)
+            state[3].append(fix_state)
 
         # 统一全局奖励
         if use_global_reward:
@@ -635,8 +644,11 @@ class GlobalAgentsEnv:
 
     def getDefendStateReward(self):
         # state = self.transformDefendState(self.state[1])
+        if use_fix_obs:
+            obs = self.state[3]
+        else:
+            obs = self.state[1]
         state = self.state[2]
-        obs = self.state[1]
         return obs, self.reward[1], state
 
     def getDone(self):
