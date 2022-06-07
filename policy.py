@@ -24,7 +24,7 @@ class QMIX:
             input_shape += self.n_actions
         if self.conf.reuse_network:
             input_shape += self.n_agents
-
+        print(f"---\n----input shapeee:{input_shape}")
         # NET
         self.eval_drqn_net = DRQN(input_shape, self.conf).to(self.device)
         self.target_drqn_net = DRQN(input_shape, self.conf).to(self.device)
