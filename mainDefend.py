@@ -113,9 +113,9 @@ while i_episode < n_episode:
         if add_role:
             for i in range(len(obs)):
                 if i % 3 == 0:
-                    obs[i].extend([0, 1])
+                    next_obs[i].extend([0, 1])
                 else:
-                    obs[i].extend([1, 0])
+                    next_obs[i].extend([1, 0])
         # print(reward)
         buff.add(np.array(obs), action, reward, np.array(next_obs), n_adj, next_adj, terminated)
         score += sum(reward)

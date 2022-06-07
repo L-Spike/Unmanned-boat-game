@@ -74,6 +74,12 @@ while i_episode < run_n_episode:
                     obs[i].extend([0, 1])
                 else:
                     obs[i].extend([1, 0])
+        if add_role:
+            for i in range(len(obs)):
+                if i % 3 == 0:
+                    obs[i].extend([0, 1])
+                else:
+                    obs[i].extend([1, 0])
         print(reward)
         # print(reward)
         if terminated:
