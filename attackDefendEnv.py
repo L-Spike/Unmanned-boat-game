@@ -429,7 +429,6 @@ class GlobalAgentsEnv:
         self.updateAttackAdj()
 
         global_state = []
-        fix_state = []
 
         # 攻方的观测， 再此过程中得到奖励
         for cur_agent_id in self.attackAgentIds:
@@ -513,8 +512,7 @@ class GlobalAgentsEnv:
             s = getDis(target_position, cur_position)
             phi = azimuthAngleWP(cur_position, target_position)
             cur_observe[3] = [s/max_dis, phi/360]
-
-            fix_state.extend([cur_velocity/max_velocity, cur_angle/360, s/max_dis, phi/360])
+            fix_state = [cur_velocity/max_velocity, cur_angle/360, s/max_dis, phi/360]
 
             for other_agent_id in self.defendAgentIds:
                 if cur_agent_id == other_agent_id:
@@ -724,7 +722,8 @@ class GlobalAgentsEnv:
         self.updateStateReward()
 
         obs, reward, state = self.getDefendStateReward()
-        obs = transformState(obs)
+        if not use_fix_obs:
+            obs = transformState(obs)
         done = self.getDone()
 
         if done:
