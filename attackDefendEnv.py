@@ -391,7 +391,8 @@ class GlobalAgentsEnv:
         self.reset()
         self.updateStateReward()
         d_obs, _, state = self.getDefendStateReward()
-        d_obs = transformState(d_obs)
+        if not use_fix_obs:
+            d_obs = transformState(d_obs)
         return d_obs, self.defend_adj, state
 
     # 以对象的方式设置防守和进攻策略
