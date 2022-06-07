@@ -49,12 +49,15 @@ def train():
     for epoch in range(conf.n_epochs):
         with torch.no_grad():
             episodes = []
+            print("a")
             for episode_idx in range(conf.n_eposodes):
+                print("b")
                 episode, cumulative_reward, episode_step, wintag= rollout_worker.generate_episode(episode_idx)
                 cumulative_rewards.append(cumulative_reward)
 
                 episodes.append(episode)
                 episode_steps.append(episode_step)
+                print("c")
 
             episode_batch = episodes[0]
             episodes.pop(0)
@@ -73,7 +76,9 @@ def train():
         # print(episode_batch['avail_u_'].shape) # (1, 200, 3, 10)
         # print(episode_batch['padded'].shape)   # (1, 200, 1)
         # print(episode_batch['terminated'].shape) # (1, 200, 1)
+        print("d")
         for train_step in range(conf.train_steps):
+            print("e")
             mini_batch = buffer.sample(min(buffer.current_size, conf.batch_size))  # obs； (64, 200, 3, 42)
             # print(mini_batch['o'].shape)
             # print("1:{}".format(torch.cuda.memory_allocated(0)))

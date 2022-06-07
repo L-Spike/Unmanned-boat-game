@@ -841,7 +841,10 @@ class DefendAgentsEnv(gym.Env, ABC):
         super().__init__()
         self.global_agents_env = global_agents_env
         self.n_agent = defend_num
-        self.n_observation = 4 + 10 * reward_agent_num + 2 * reward_agent_num * reward_agent_num
+        if use_fix_obs:
+            self.n_observation = 4 + (defend_num-1)*5 + attack_num*5
+        else:
+            self.n_observation = 4 + 10 * reward_agent_num + 2 * reward_agent_num * reward_agent_num
         if action_setting == "speed" and actinIndex == "all":
             self.n_action = 9
         else:
