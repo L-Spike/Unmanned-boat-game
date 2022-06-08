@@ -92,7 +92,7 @@ def train():
             win_rate, episode_reward = evaluate(rollout_worker)
             win_rates.append(win_rate)
             episode_rewards.append(episode_reward)
-            print("train epoch: {}, win rate: {}%, episode reward: {}".format(epoch, win_rate, episode_reward))
+            print("train epoch: {}, win rate: {}, episode reward: {}".format(epoch, win_rate, episode_reward))
             # show_curves(win_rates, episode_rewards)
 
     time_tuple = time.localtime(time.time())

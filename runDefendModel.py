@@ -34,7 +34,7 @@ g_env = GlobalAgentsEnv(RandomDefendStrategy(),
 env = DefendAgentsEnv(g_env)
 
 n_ant = env.n_agent
-observation_space = env.n_observation
+observation_space = env.n_observation+2 if add_role else env.n_observation
 n_actions = env.n_action
 
 if use_double_dgn:
@@ -71,15 +71,9 @@ while i_episode < run_n_episode:
         if add_role:
             for i in range(len(obs)):
                 if i % 3 == 0:
-                    obs[i].extend([0, 1])
+                    next_obs[i].extend([0, 1])
                 else:
-                    obs[i].extend([1, 0])
-        if add_role:
-            for i in range(len(obs)):
-                if i % 3 == 0:
-                    obs[i].extend([0, 1])
-                else:
-                    obs[i].extend([1, 0])
+                    next_obs[i].extend([1, 0])
         print(reward)
         # print(reward)
         if terminated:
