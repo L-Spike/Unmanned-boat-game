@@ -46,7 +46,7 @@ g_env = GlobalAgentsEnv(RandomDefendStrategy(),
 env = DefendAgentsEnv(g_env)
 
 n_ant = env.n_agent
-observation_space = env.n_observation
+observation_space = env.n_observation+2 if add_role else env.n_observation
 n_actions = env.n_action
 buff = ReplayBuffer(capacity, observation_space, n_actions, n_ant)
 model_path = args.path
