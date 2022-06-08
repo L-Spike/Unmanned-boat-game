@@ -548,7 +548,7 @@ class GlobalAgentsEnv:
                         if state_seg[0] == cur_agent_id:
                             state_add_.extend([0, 0])
                         else:
-                            state_add_.extend(state_seg[1:3])
+                            state_add_.extend(state_seg[0:2])
                     tmp_ = [dis/max_dis, phi/360, velocity/max_velocity, angle/360, dis_t/max_dis]
                     tmp_.extend(state_add_)
                     cur_observe[2].append(tmp_)
