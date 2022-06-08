@@ -30,6 +30,17 @@ def azimuthAngleWP(pos1, pos2):
     return azimuthAngleWPBase(dx, dy)
 
 
+def getPhixy(phi):
+    phi_x = math.sin(phi * math.pi / 180)
+    phi_y = math.cos(phi * math.pi / 180)
+    return phi_x, phi_y
+
+def getPhixyReverse(phis):
+    phi_x, phi_y = phis
+    return azimuthAngleWPBase(phi_x, phi_y)
+
+
+
 def azimuthAngleWPBase(dx, dy):
     angle = 0
     if dx == 0:
@@ -148,6 +159,31 @@ def transformState(state):
         g_cur_state.extend(cur_state[-1])
         g_state.append(g_cur_state)
     return g_state
+
+
+def sort_obs_to_cur_ob(ob_list, cur_observe):
+    ob_list = sorted(ob_list, key=lambda x: (x[0], x[1]))[:reward_agent_num]
+    if len(ob_list) < reward_agent_num:
+        for i in range(len(ob_list), reward_agent_num):
+            ob_list.append([0, 0, 0, 0])
+    for ob in ob_list:
+        cur_observe.extend(ob)
+
+
+def sort_obs_to_cur_ob_defend(ob_list, cur_observe):
+    ob_list = sorted(ob_list, key=lambda x: (x[0], x[1]))[:reward_agent_num]
+    if len(ob_list) < reward_agent_num:
+        for i in range(len(ob_list), reward_agent_num):
+            ob_list.append([0 for i in range(4+reward_agent_num*2)])
+    for ob in ob_list:
+        cur_observe.extend(ob)
+
+
+def get_fuzhu(ob_list):
+    ob_list = sorted(ob_list, key=lambda x: (x[1], x[2]))[:reward_agent_num]
+    if len(ob_list) < reward_agent_num:
+        for i in range(len(ob_list), reward_agent_num):
+            ob_list.append([0, 0, 0, 0, 0])
 
 
 def attackAction(s, phi, symbol):

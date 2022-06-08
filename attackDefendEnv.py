@@ -78,7 +78,7 @@ class SimpleAttackStrategy(AttackStrategy):
         # 环境自身的状态给定依据转换，通信距离的体现，历史的位置(清除)
 
         # 遍历所有攻方agent
-        # [[cur_velocity, cur_angle], [[other_agent_id, s, phi, velocity, angle]...],
+        # [[cur_velocity, cur_angle], [[other_agent_id, s, phi, velocity, angle]...]
         # [[other_agent_id, s, phi, velocity, angle],...], dis]
         for agent_index, agent_info in enumerate(states):
             min_threat_degree = attack_threat_dis
@@ -86,22 +86,21 @@ class SimpleAttackStrategy(AttackStrategy):
             min_delta = -1
             min_threat_agent_info = None
             # logging.debug(f'agent_info: {agent_info}')
-            velocity1 = agent_info[0][0]*max_velocity
-            angle1 = agent_info[0][1]*360
-            target_angle = agent_info[-1][1]*360
-            # print(f"智能体数量:{len(agent_info[2])}")
-            for defend_agent_info in agent_info[2]:
-                s = defend_agent_info[0]*max_dis
-                phi = defend_agent_info[1]*360
-                velocity2 = defend_agent_info[2]*max_velocity
-                angle2 = defend_agent_info[3]*360
-                # threat_degree, d, delta = self.calThreatDegree(s, phi, angle1, angle2, velocity1, velocity2)
-                threat_degree = self.calThreatDegreeSimple(s, phi, agent_info[-1][0]*max_dis, agent_info[-1][1]*360)
+            velocity1 = None
+            angle1 = None
+            target_angle = agent_info[0]
+            for i in range(defend_num):
+                defend_agent_info = agent_info[3 + i * 6: 3 + (i + 1) * 6]
+                s = defend_agent_info[0]
+                phi = getPhixyReverse(defend_agent_info[1:3])
+                s_t = defend_agent_info[3]
+                s_t_phi = getPhixyReverse(defend_agent_info[4:6])
+                velocity2 = 0
+                angle2 = 0
+                threat_degree = self.calThreatDegreeSimple(s, phi, s_t, s_t_phi)
                 if min_threat_degree > threat_degree:
                     # 处理  标记
                     min_threat_degree = threat_degree
-                    # min_d = d
-                    # min_delta = delta
                     min_threat_agent_info = defend_agent_info
 
             if min_threat_degree == attack_threat_dis:
@@ -114,10 +113,10 @@ class SimpleAttackStrategy(AttackStrategy):
                     action = self.getActionsSimple(angle1)
             else:
                 # 计算
-                s = min_threat_agent_info[0]*max_dis
-                phi = min_threat_agent_info[1]*360
-                velocity2 = min_threat_agent_info[2]*max_velocity
-                angle2 = min_threat_agent_info[3]*360
+                s = min_threat_agent_info[0] * max_dis
+                phi = min_threat_agent_info[1] * 360
+                velocity2 = min_threat_agent_info[2] * max_velocity
+                angle2 = min_threat_agent_info[3] * 360
                 if action_setting == "speed" and actinIndex == "all":
                     symbol = 1 if relativeAngleWithSymbol(target_angle, phi) > 0 else -1
                     # target_angle = (phi + (symbol * 135)) % 360
@@ -391,8 +390,6 @@ class GlobalAgentsEnv:
         self.reset()
         self.updateStateReward()
         d_obs, _, state = self.getDefendStateReward()
-        if not use_fix_obs:
-            d_obs = transformState(d_obs)
         return d_obs, self.defend_adj, state
 
     # 以对象的方式设置防守和进攻策略
@@ -418,8 +415,71 @@ class GlobalAgentsEnv:
             velocity, _ = p.getBaseVelocity(agent_id)
             self.agentCurVelocities[self.id2Index[agent_id]] = velocity
 
+    def get_allay_ob_list(self, cur_agent_id, cur_position, ids, fix_state):
+        allay_ob_list = []
+        for other_agent_id in ids:
+            if cur_agent_id == other_agent_id:
+                continue
+            other_position = self.agentCurPositions[self.id2Index[other_agent_id]]
+            other_speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
+            other_velocity, other_angle = velocityConversionVerse(other_speed)
+            s = getDis(cur_position, other_position)
+            phi = azimuthAngleWP(cur_position, other_position)
+            phi_x, phi_y = getPhixy(phi)
+            dis_t = getDis(target_position, other_position)
+            dis_t_x, dis_t_y = getPhixy(azimuthAngleWP(target_position, other_position))
+            if s < communicate_radius:
+                allay_ob_list.append([s / max_dis, phi_x, phi_y, dis_t / max_dis])
+                fix_state.extend([s / max_dis, phi_x, phi_y, dis_t / max_dis, dis_t_x, dis_t_y])
+
+        return allay_ob_list
+
+    def get_enemy_ob_list(self, cur_position, ids, fix_state):
+        enemy_ob_list = []
+        fuzhu_list = []
+        for other_agent_id in ids:
+            other_position = self.agentCurPositions[self.id2Index[other_agent_id]]
+            other_speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
+            other_velocity, other_angle = velocityConversionVerse(other_speed)
+            s = getDis(cur_position, other_position)
+            phi = azimuthAngleWP(cur_position, other_position)
+            phi_x, phi_y = getPhixy(phi)
+            dis_t = getDis(target_position, other_position)
+            dis_t_x, dis_t_y = getPhixy(azimuthAngleWP(target_position, other_position))
+            if s < communicate_radius:
+                enemy_ob_list.append([s / max_dis, phi_x, phi_y, dis_t / max_dis])
+                fix_state.extend([s / max_dis, phi_x, phi_y, dis_t / max_dis, dis_t_x, dis_t_y])
+                fuzhu_list.append([other_agent_id, s / max_dis, phi_x, phi_y, dis_t / max_dis])
+        return enemy_ob_list, fuzhu_list
+
+    def get_enemy_ob_list_defend(self, cur_agent_id, cur_position, ids, fuzhu, fix_state):
+        enemy_ob_list = []
+        fuzhu_list = []
+        for other_agent_id in ids:
+            other_position = self.agentCurPositions[self.id2Index[other_agent_id]]
+            other_speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
+            other_velocity, other_angle = velocityConversionVerse(other_speed)
+            s = getDis(cur_position, other_position)
+            phi = azimuthAngleWP(cur_position, other_position)
+            phi_x, phi_y = getPhixy(phi)
+            dis_t = getDis(target_position, other_position)
+            dis_t_x, dis_t_y = getPhixy(azimuthAngleWP(target_position, other_position))
+            if s < communicate_radius:
+                state_index = other_agent_id - defend_num - 1
+                state_add_ = []
+                for state_seg in fuzhu[state_index]:
+                    if state_seg[0] == cur_agent_id:
+                        state_add_.extend([0, 0])
+                    else:
+                        state_add_.extend(state_seg[1:3])
+
+                enemy_ob_list.append([s / max_dis, phi_x, phi_y, dis_t / max_dis].extend(state_add_))
+                fix_state.extend([s / max_dis, phi_x, phi_y, dis_t / max_dis, dis_t_x, dis_t_y])
+
+        return enemy_ob_list, fuzhu_list
+
     def updateStateReward(self):
-        state = [[], [], [], []]
+        state = [[], [], [], [], []]
         reward = [[], []]
 
         # 更新当前智能体位置和速度
@@ -429,141 +489,63 @@ class GlobalAgentsEnv:
         self.updateAttackAdj()
 
         global_state = []
-
+        fuzhu = []
         # 攻方的观测， 再此过程中得到奖励
         for cur_agent_id in self.attackAgentIds:
+            cur_observe = []
+
             cur_position = self.agentCurPositions[self.id2Index[cur_agent_id]]
             cur_speed = self.agentCurVelocities[self.id2Index[cur_agent_id]]
             cur_velocity, cur_angle = velocityConversionVerse(cur_speed)
-
-            # velocity, angle]...], [[ther_agent_id, s, phi, velocity, angle],...], dis]
-
-            cur_observe = [[cur_velocity/max_velocity, cur_angle*math.pi/180], [], [], []]
-            s = getDis(target_position, cur_position)
+            s = getDis(cur_position, target_position)
             phi = azimuthAngleWP(cur_position, target_position)
-            cur_observe[3] = [s/max_dis, phi/360]
+            phi_x, phi_y = getPhixy(phi)
 
-            global_state.extend([cur_velocity/max_velocity, cur_angle/360, s/max_dis, phi/360])
+            cur_observe.extend([s / max_dis, phi_x, phi_y])
+            global_state.extend([s / max_dis, -phi_x, -phi_y])
+            fix_state = [s / max_dis, phi_x, phi_y]
 
             # calculate attack reward
             if use_angle:
                 attack_reward = attackRewardDisAngle(s, cur_angle)
             else:
                 attack_reward = attackRewardDis(s)
+
             reward[0].append(attack_reward)
+            allay_ob_list = self.get_allay_ob_list(cur_agent_id, cur_position, self.attackAgentIds, fix_state)
+            sort_obs_to_cur_ob(allay_ob_list, cur_observe)
 
-            for other_agent_id in self.attackAgentIds:
-                if cur_agent_id == other_agent_id:
-                    # global_state_seg.extend([0,0])
-                    continue
-                other_position = self.agentCurPositions[self.id2Index[cur_agent_id]]
-                dis = getDis(cur_position, other_position)
+            enemy_ob_list, fuzhu_list = self.get_enemy_ob_list(cur_position, self.defendAgentIds, fix_state)
+            fuzhu_list = get_fuzhu(fuzhu_list)
+            fuzhu.append(fuzhu_list)
+            sort_obs_to_cur_ob(enemy_ob_list, cur_observe)
 
-                if dis < communicate_radius:
-                    phi = azimuthAngleWP(cur_position, other_position)
-                    speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
-                    velocity, angle = velocityConversionVerse(speed)
-                    dis_t = getDis(target_position, other_position)
-                    cur_observe[1].append([dis/max_dis, phi/360, velocity/max_velocity, angle/360, dis_t/max_dis])
-
-                # if need_global_state:
-                #     if dis >= communicate_radius:
-                #         phi = azimuthAngleWP(cur_position, other_position)
-                #         speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
-                #     global_state.extend([dis, phi])
-
-            cur_observe_sort = sorted(cur_observe[1], key=lambda x: (x[1], x[2]))[:reward_agent_num]
-            if len(cur_observe_sort) < reward_agent_num:
-                for i in range(len(cur_observe_sort), reward_agent_num):
-                    cur_observe_sort.append([0, 0, 0, 0, 0])
-            cur_observe[1] = cur_observe_sort
-
-            for other_agent_id in self.defendAgentIds:
-                other_position = self.agentCurPositions[self.id2Index[other_agent_id]]
-                dis = getDis(cur_position, other_position)
-                if dis < observe_radius:
-                    phi = azimuthAngleWP(cur_position, other_position)
-                    speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
-                    velocity, angle = velocityConversionVerse(speed)
-                    dis_t = getDis(target_position, other_position)
-                    cur_observe[2].append([dis/max_dis, phi/360, velocity/max_velocity, angle/360, dis_t/max_dis])
-
-                if need_global_state:
-                    if dis >= observe_radius:
-                        phi = azimuthAngleWP(cur_position, other_position)
-                    global_state.extend([dis/max_dis, phi/360])
-
-            cur_observe_sort = sorted(cur_observe[2], key=lambda x: (x[1], x[2]))[:reward_agent_num]
-            if len(cur_observe_sort) < reward_agent_num:
-                for i in range(len(cur_observe_sort), reward_agent_num):
-                    cur_observe_sort.append([0, 0, 0, 0, 0])
-            cur_observe[2] = cur_observe_sort
             state[0].append(cur_observe)
-
-        state[2] = global_state
+            state[1].append(fix_state)
 
         # observe for defend
         self.defendLineTime = (self.defendLineTime + 1) % 100
         for cur_agent_id in self.defendAgentIds:
+            cur_observe = []
+
             cur_position = self.agentCurPositions[self.id2Index[cur_agent_id]]
             cur_speed = self.agentCurVelocities[self.id2Index[cur_agent_id]]
             cur_velocity, cur_angle = velocityConversionVerse(cur_speed)
-            cur_observe = [[cur_velocity/max_velocity, cur_angle/360], [], [], []]
-            s = getDis(target_position, cur_position)
+            s = getDis(cur_position, target_position)
             phi = azimuthAngleWP(cur_position, target_position)
-            cur_observe[3] = [s/max_dis, phi/360]
-            fix_state = [cur_velocity/max_velocity, cur_angle/360, s/max_dis, phi/360]
+            phi_x, phi_y = getPhixy(phi)
 
-            for other_agent_id in self.defendAgentIds:
-                if cur_agent_id == other_agent_id:
-                    continue
-                other_position = self.agentCurPositions[self.id2Index[other_agent_id]]
-                dis = getDis(cur_position, other_position)
-                if dis < communicate_radius:
-                    phi = azimuthAngleWP(cur_position, other_position)
-                    speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
-                    velocity, angle = velocityConversionVerse(speed)
-                    dis_t = getDis(target_position, other_position)
-                    cur_observe[1].append([dis/max_dis, phi/360, velocity/max_velocity, angle/360, dis_t/max_dis])
+            cur_observe.extend([s / max_dis, phi_x, phi_y])
+            global_state.extend([s / max_dis, -phi_x, -phi_y])
+            fix_state = [s / max_dis, phi_x, phi_y]
 
-                    fix_state.extend([dis / max_dis, phi / 360, velocity / max_velocity, angle / 360, dis_t / max_dis])
+            allay_ob_list = self.get_allay_ob_list(cur_agent_id, cur_position, self.defendAgentIds, fix_state)
+            sort_obs_to_cur_ob(allay_ob_list, cur_observe)
 
-            cur_observe_sort = sorted(cur_observe[1], key=lambda x: (x[1], x[2]))[:reward_agent_num]
-            if len(cur_observe_sort) < reward_agent_num:
-                for i in range(len(cur_observe_sort), reward_agent_num):
-                    cur_observe_sort.append([0, 0, 0, 0, 0])
-            cur_observe[1] = cur_observe_sort
+            enemy_ob_list = self.get_enemy_ob_list_defend(cur_agent_id, cur_position, self.attackAgentIds, fuzhu,
+                                                          fix_state)
+            sort_obs_to_cur_ob_defend(enemy_ob_list, cur_observe)
 
-            for other_agent_id in self.attackAgentIds:
-                other_position = self.agentCurPositions[self.id2Index[other_agent_id]]
-                dis = getDis(cur_position, other_position)
-                if dis < observe_radius:
-                    phi = azimuthAngleWP(cur_position, other_position)
-                    speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
-                    velocity, angle = velocityConversionVerse(speed)
-                    dis_t = getDis(target_position, other_position)
-                    state_index = other_agent_id - defend_num - 1
-                    state_add_ = []
-                    for state_seg in state[0][state_index][2]:
-                        if state_seg[0] == cur_agent_id:
-                            state_add_.extend([0, 0])
-                        else:
-                            state_add_.extend(state_seg[0:2])
-                    tmp_ = [dis/max_dis, phi/360, velocity/max_velocity, angle/360, dis_t/max_dis]
-                    tmp_.extend(state_add_)
-                    cur_observe[2].append(tmp_)
-
-                    fix_state.extend([dis / max_dis, phi / 360, velocity / max_velocity, angle / 360, dis_t / max_dis])
-
-            # todo 排序依据
-            # print(f"aa:{cur_observe[2]}")
-            cur_observe_sort = sorted(cur_observe[2], key=lambda x: (x[1], x[2]))[:reward_agent_num]
-            if len(cur_observe_sort) < reward_agent_num:
-                for i in range(len(cur_observe_sort), reward_agent_num):
-                    cur_observe_sort.append([0 for i in range(5 + 2 * reward_agent_num)])
-            cur_observe[2] = cur_observe_sort
-
-            # todo
             if not use_global_reward:
                 # 选择最近的攻击方智能体进行防守
                 cur_observe_ = cur_observe[2][0]
@@ -571,7 +553,8 @@ class GlobalAgentsEnv:
                 from_ = list(cur_position[:])
                 from_.append(0)
                 if cur_observe_[0] != 0:
-                    defend_reward = defendRewardSimpleV3(cur_observe_[1]*max_dis, cur_observe_[-1]*max_dis, cur_observe[3][0]*max_dis)
+                    defend_reward = defendRewardSimpleV3(cur_observe_[1] * max_dis, cur_observe_[-1] * max_dis,
+                                                         cur_observe[3][0] * max_dis)
 
                     if self.defendLineTime == 0 and DEBUG:
                         if cur_agent_id in self.defendLines:
@@ -598,9 +581,10 @@ class GlobalAgentsEnv:
                             textSize=3
                         )
                 reward[1].append(defend_reward)
-            state[1].append(cur_observe)
+            state[2].append(cur_observe)
             state[3].append(fix_state)
 
+        state[4] = global_state
         # 统一全局奖励
         if use_global_reward:
             g_reward = self.getTotalRewardV2()
@@ -638,7 +622,7 @@ class GlobalAgentsEnv:
 
     def getAttackStateReward(self):
         # state = self.transformAttackState(self.state[0])
-        state = self.state[0]
+        state = self.state[1]
         return state, self.reward[0]
 
     def getDefendStateReward(self):
@@ -646,8 +630,8 @@ class GlobalAgentsEnv:
         if use_fix_obs:
             obs = self.state[3]
         else:
-            obs = self.state[1]
-        state = self.state[2]
+            obs = self.state[2]
+        state = self.state[4]
         return obs, self.reward[1], state
 
     def getDone(self):
@@ -722,8 +706,6 @@ class GlobalAgentsEnv:
         self.updateStateReward()
 
         obs, reward, state = self.getDefendStateReward()
-        if not use_fix_obs:
-            obs = transformState(obs)
         done = self.getDone()
 
         if done:
@@ -842,7 +824,7 @@ class DefendAgentsEnv(gym.Env, ABC):
         self.global_agents_env = global_agents_env
         self.n_agent = defend_num
         if use_fix_obs:
-            self.n_observation = 4 + (defend_num-1)*5 + attack_num*5
+            self.n_observation = 4 + (defend_num - 1) * 5 + attack_num * 5
         else:
             self.n_observation = 4 + 10 * reward_agent_num + 2 * reward_agent_num * reward_agent_num
         if action_setting == "speed" and actinIndex == "all":
