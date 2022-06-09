@@ -180,7 +180,7 @@ while i_episode < n_episode:
     loss1s.append(np.mean(loss1_rollouts))
     loss2s.append(np.mean(loss2_rollouts))
 
-    if i_episode % 100 == 0:
+    if i_episode % 1000 == 0:
         # 存储网络参数， 完成预测defend
         time_tuple = time.localtime(time.time())
         model_save_path = os.path.join(model_dirs,
