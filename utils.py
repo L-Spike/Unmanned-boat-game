@@ -165,7 +165,7 @@ def sort_obs_to_cur_ob(ob_list, cur_observe):
     ob_list = sorted(ob_list, key=lambda x: (x[0], x[1]))[:reward_agent_num]
     if len(ob_list) < reward_agent_num:
         for i in range(len(ob_list), reward_agent_num):
-            ob_list.append([0, 0, 0, 0, 0, 0])
+            ob_list.append([0, 0, 0, 0, 0])
     for ob in ob_list:
         cur_observe.extend(ob)
 
