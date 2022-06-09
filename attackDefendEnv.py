@@ -541,7 +541,7 @@ class GlobalAgentsEnv:
             allay_ob_list = self.get_allay_ob_list(cur_agent_id, cur_position, self.defendAgentIds, fix_state)
             sort_obs_to_cur_ob(allay_ob_list, cur_observe)
 
-            enemy_ob_list= self.get_enemy_ob_list_defend(cur_agent_id, cur_position, self.attackAgentIds, fuzhu,
+            enemy_ob_list = self.get_enemy_ob_list_defend(cur_agent_id, cur_position, self.attackAgentIds, fuzhu,
                                                           fix_state)
             sort_obs_to_cur_ob_defend(enemy_ob_list, cur_observe)
 
@@ -835,7 +835,7 @@ class DefendAgentsEnv(gym.Env, ABC):
         self.adj = None
         self.reward = None
         self.done = None
-        self.env_info = {'state_shape': (defend_num + attack_num)*3, 'obs_shape': self.n_observation,
+        self.env_info = {'state_shape': (defend_num + attack_num) * 3, 'obs_shape': self.n_observation,
                          'n_actions': self.n_action,
                          'n_agents': defend_num, 'episode_limit': max_step}
 
