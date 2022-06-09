@@ -179,7 +179,7 @@ def sort_obs_to_cur_ob_defend(ob_list, cur_observe):
         cur_observe.extend(ob)
 
 
-def get_fuzhu(ob_list):
+def change_fuzhu(ob_list):
     ob_list = sorted(ob_list, key=lambda x: (x[1], x[2]))[:reward_agent_num]
     if len(ob_list) < reward_agent_num:
         for i in range(len(ob_list), reward_agent_num):
