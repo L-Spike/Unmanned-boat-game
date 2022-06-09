@@ -517,7 +517,7 @@ class GlobalAgentsEnv:
             sort_obs_to_cur_ob(allay_ob_list, cur_observe)
 
             enemy_ob_list, fuzhu_list = self.get_enemy_ob_list(cur_position, self.defendAgentIds, fix_state)
-            change_fuzhu(fuzhu_list)
+            fuzhu_list = change_fuzhu(fuzhu_list)
             fuzhu.append(fuzhu_list)
             sort_obs_to_cur_ob(enemy_ob_list, cur_observe)
 

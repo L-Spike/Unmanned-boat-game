@@ -186,6 +186,7 @@ def change_fuzhu(ob_list):
     if len(ob_list) < reward_agent_num:
         for i in range(len(ob_list), reward_agent_num):
             ob_list.append([0, 0, 0, 0, 0])
+    return ob_list
 
 
 def attackAction(s, phi, symbol):
