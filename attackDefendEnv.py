@@ -824,9 +824,9 @@ class DefendAgentsEnv(gym.Env, ABC):
         self.global_agents_env = global_agents_env
         self.n_agent = defend_num
         if use_fix_obs:
-            self.n_observation = 4 + (defend_num - 1) * 5 + attack_num * 5
+            self.n_observation = 3 + (defend_num - 1) * 6 + attack_num * 6
         else:
-            self.n_observation = 4 + 10 * reward_agent_num + 2 * reward_agent_num * reward_agent_num
+            self.n_observation = 3 + 8 * reward_agent_num + 2 * reward_agent_num * reward_agent_num
         if action_setting == "speed" and actinIndex == "all":
             self.n_action = 9
         else:
@@ -836,7 +836,7 @@ class DefendAgentsEnv(gym.Env, ABC):
         self.adj = None
         self.reward = None
         self.done = None
-        self.env_info = {'state_shape': (4 + defend_num * 2) * attack_num, 'obs_shape': self.n_observation,
+        self.env_info = {'state_shape': (defend_num + attack_num)*3, 'obs_shape': self.n_observation,
                          'n_actions': self.n_action,
                          'n_agents': defend_num, 'episode_limit': max_step}
 
