@@ -541,10 +541,12 @@ class GlobalAgentsEnv:
 
             allay_ob_list = self.get_allay_ob_list(cur_agent_id, cur_position, self.defendAgentIds, fix_state)
             sort_obs_to_cur_ob(allay_ob_list, cur_observe)
+            print("a",cur_observe)
 
             enemy_ob_list = self.get_enemy_ob_list_defend(cur_agent_id, cur_position, self.attackAgentIds, fuzhu,
                                                           fix_state)
             sort_obs_to_cur_ob_defend(enemy_ob_list, cur_observe)
+            print("b",cur_observe)
 
             if not use_global_reward:
                 # 选择最近的攻击方智能体进行防守
@@ -827,6 +829,7 @@ class DefendAgentsEnv(gym.Env, ABC):
             self.n_observation = 3 + (defend_num - 1) * 6 + attack_num * 6
         else:
             self.n_observation = 3 + 8 * reward_agent_num + 2 * reward_agent_num * reward_agent_num
+            # a = 4*reward_agent_num + (4+2*reward_agent_num)*reward_agent_num
         if action_setting == "speed" and actinIndex == "all":
             self.n_action = 9
         else:
