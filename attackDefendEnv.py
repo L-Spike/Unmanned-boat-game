@@ -542,12 +542,10 @@ class GlobalAgentsEnv:
 
             allay_ob_list = self.get_allay_ob_list(cur_agent_id, cur_position, self.defendAgentIds, fix_state)
             sort_obs_to_cur_ob(allay_ob_list, cur_observe)
-            print("a",cur_observe, "length", len(cur_observe))
 
             enemy_ob_list = self.get_enemy_ob_list_defend(cur_agent_id, cur_position, self.attackAgentIds, fuzhu,
                                                           fix_state)
             sort_obs_to_cur_ob_defend(enemy_ob_list, cur_observe)
-            print("b",cur_observe, "length:", len(cur_observe))
 
             if not use_global_reward:
                 # 选择最近的攻击方智能体进行防守
