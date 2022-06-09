@@ -88,12 +88,12 @@ class SimpleAttackStrategy(AttackStrategy):
             # logging.debug(f'agent_info: {agent_info}')
             velocity1 = None
             angle1 = None
-            target_angle = agent_info[0]
+            target_angle = getPhixyReverse(agent_info[1:3])
             for i in range(defend_num):
                 defend_agent_info = agent_info[3 + i * 6: 3 + (i + 1) * 6]
-                s = defend_agent_info[0]
+                s = defend_agent_info[0]*max_dis
                 phi = getPhixyReverse(defend_agent_info[1:3])
-                s_t = defend_agent_info[3]
+                s_t = defend_agent_info[3]*max_dis
                 s_t_phi = getPhixyReverse(defend_agent_info[4:6])
                 velocity2 = 0
                 angle2 = 0
