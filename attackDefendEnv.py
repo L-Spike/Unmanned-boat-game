@@ -473,6 +473,7 @@ class GlobalAgentsEnv:
                         state_add_.extend(state_seg[1:3])
                 tmp = [s / max_dis, phi_x, phi_y, dis_t / max_dis]
                 tmp.extend(state_add_)
+                print("tmp:", len(tmp))
                 enemy_ob_list.append(tmp)
                 fix_state.extend([s / max_dis, phi_x, phi_y, dis_t / max_dis, dis_t_x, dis_t_y])
 
@@ -541,7 +542,7 @@ class GlobalAgentsEnv:
 
             allay_ob_list = self.get_allay_ob_list(cur_agent_id, cur_position, self.defendAgentIds, fix_state)
             sort_obs_to_cur_ob(allay_ob_list, cur_observe)
-            print("a",cur_observe, "length",len(cur_observe))
+            print("a",cur_observe, "length", len(cur_observe))
 
             enemy_ob_list = self.get_enemy_ob_list_defend(cur_agent_id, cur_position, self.attackAgentIds, fuzhu,
                                                           fix_state)

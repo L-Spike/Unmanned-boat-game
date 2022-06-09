@@ -176,6 +176,7 @@ def sort_obs_to_cur_ob_defend(ob_list, cur_observe):
     if len(ob_list) < reward_agent_num:
         for i in range(len(ob_list), reward_agent_num):
             ob_list.append([0 for i in range(4+reward_agent_num*2)])
+            print("addd")
     for ob in ob_list:
         cur_observe.extend(ob)
 
