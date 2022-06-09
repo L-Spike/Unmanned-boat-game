@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 import gc
 from config import Config
 import pickle
+if not use_fix_obs:
+    print("need fix obs")
+    exit(0)
 
 conf = Config()
 

@@ -91,9 +91,9 @@ class SimpleAttackStrategy(AttackStrategy):
             target_angle = getPhixyReverse(agent_info[1:3])
             for i in range(defend_num):
                 defend_agent_info = agent_info[3 + i * 6: 3 + (i + 1) * 6]
-                s = defend_agent_info[0]*max_dis
+                s = defend_agent_info[0] * max_dis
                 phi = getPhixyReverse(defend_agent_info[1:3])
-                s_t = defend_agent_info[3]*max_dis
+                s_t = defend_agent_info[3] * max_dis
                 s_t_phi = getPhixyReverse(defend_agent_info[4:6])
                 velocity2 = 0
                 angle2 = 0
@@ -429,7 +429,7 @@ class GlobalAgentsEnv:
             dis_t = getDis(target_position, other_position)
             dis_t_x, dis_t_y = getPhixy(azimuthAngleWP(target_position, other_position))
             if s < communicate_radius:
-                allay_ob_list.append([s / max_dis, phi_x, phi_y, dis_t / max_dis])
+                allay_ob_list.append([s / max_dis, phi_x, phi_y, dis_t / max_dis, 1])
                 fix_state.extend([s / max_dis, phi_x, phi_y, dis_t / max_dis, dis_t_x, dis_t_y])
 
         return allay_ob_list
@@ -447,9 +447,9 @@ class GlobalAgentsEnv:
             dis_t = getDis(target_position, other_position)
             dis_t_x, dis_t_y = getPhixy(azimuthAngleWP(target_position, other_position))
             if s < communicate_radius:
-                enemy_ob_list.append([s / max_dis, phi_x, phi_y, dis_t / max_dis])
+                enemy_ob_list.append([s / max_dis, phi_x, phi_y, dis_t / max_dis, 1])
                 fix_state.extend([s / max_dis, phi_x, phi_y, dis_t / max_dis, dis_t_x, dis_t_y])
-                fuzhu_list.append([other_agent_id, s / max_dis, phi_x, phi_y, dis_t / max_dis])
+                fuzhu_list.append([other_agent_id, s / max_dis, phi_x, phi_y, dis_t / max_dis, 1])
         return enemy_ob_list, fuzhu_list
 
     def get_enemy_ob_list_defend(self, cur_agent_id, cur_position, ids, fuzhu, fix_state):
@@ -467,11 +467,15 @@ class GlobalAgentsEnv:
                 state_index = other_agent_id - defend_num - 1
                 state_add_ = []
                 for state_seg in fuzhu[state_index]:
-                    if state_seg[0] == cur_agent_id:
-                        state_add_.extend([0, 0])
+                    # 很少判断错误
+                    if state_seg[-1] == 1:
+                        if state_seg[0] == cur_agent_id:
+                            state_add_.extend([0, 0, 1, 1])
+                        else:
+                            state_add_.extend(state_seg[1:3] + [0, 1])
                     else:
-                        state_add_.extend(state_seg[1:3])
-                tmp = [s / max_dis, phi_x, phi_y, dis_t / max_dis]
+                        state_add_.extend([0, 0, 0, 0])
+                tmp = [s / max_dis, phi_x, phi_y, dis_t / max_dis, 1]
                 tmp.extend(state_add_)
                 enemy_ob_list.append(tmp)
                 fix_state.extend([s / max_dis, phi_x, phi_y, dis_t / max_dis, dis_t_x, dis_t_y])

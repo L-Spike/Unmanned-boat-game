@@ -12,6 +12,10 @@ from RLUtils import ReplayBuffer
 
 # from config import epsilon
 
+if use_fix_obs:
+    print("not need fix obs")
+    exit(0)
+
 USE_CUDA = torch.cuda.is_available()
 description = 'train defend model main function'
 parser = argparse.ArgumentParser(description=description)
