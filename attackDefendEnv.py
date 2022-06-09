@@ -454,7 +454,6 @@ class GlobalAgentsEnv:
 
     def get_enemy_ob_list_defend(self, cur_agent_id, cur_position, ids, fuzhu, fix_state):
         enemy_ob_list = []
-        fuzhu_list = []
         for other_agent_id in ids:
             other_position = self.agentCurPositions[self.id2Index[other_agent_id]]
             other_speed = self.agentCurVelocities[self.id2Index[other_agent_id]]
@@ -476,7 +475,7 @@ class GlobalAgentsEnv:
                 enemy_ob_list.append([s / max_dis, phi_x, phi_y, dis_t / max_dis].extend(state_add_))
                 fix_state.extend([s / max_dis, phi_x, phi_y, dis_t / max_dis, dis_t_x, dis_t_y])
 
-        return enemy_ob_list, fuzhu_list
+        return enemy_ob_list
 
     def updateStateReward(self):
         state = [[], [], [], [], []]
@@ -542,7 +541,7 @@ class GlobalAgentsEnv:
             allay_ob_list = self.get_allay_ob_list(cur_agent_id, cur_position, self.defendAgentIds, fix_state)
             sort_obs_to_cur_ob(allay_ob_list, cur_observe)
 
-            enemy_ob_list = self.get_enemy_ob_list_defend(cur_agent_id, cur_position, self.attackAgentIds, fuzhu,
+            enemy_ob_list= self.get_enemy_ob_list_defend(cur_agent_id, cur_position, self.attackAgentIds, fuzhu,
                                                           fix_state)
             sort_obs_to_cur_ob_defend(enemy_ob_list, cur_observe)
 
