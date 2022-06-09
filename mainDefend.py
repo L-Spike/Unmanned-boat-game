@@ -95,7 +95,6 @@ while i_episode < n_episode:
         steps += 1
         action = []
         n_adj = adj + np.eye(n_ant)
-        print("obs shape:",np.array([obs]).shape)
         q, a_w = model(torch.Tensor(np.array([obs])).cuda(), torch.Tensor(np.array([n_adj])).cuda())
         q = q[0]
         for i in range(n_ant):
