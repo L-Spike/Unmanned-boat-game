@@ -473,6 +473,7 @@ class GlobalAgentsEnv:
                         state_add_.extend(state_seg[1:3])
                 print("a: ",other_agent_id,"b", [s / max_dis, phi_x, phi_y, dis_t / max_dis])
                 enemy_ob_list.append([s / max_dis, phi_x, phi_y, dis_t / max_dis].extend(state_add_))
+                print("cc",enemy_ob_list)
                 fix_state.extend([s / max_dis, phi_x, phi_y, dis_t / max_dis, dis_t_x, dis_t_y])
 
         return enemy_ob_list
