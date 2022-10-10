@@ -1,4 +1,4 @@
 # Unmanned-boat-game
-无人艇博弈
+Unmanned Boat Game
 
-攻守方针对战略进行攻防演练，攻防采用规则化进攻，防守方采用强化学习进行防守。
+Offensive and defensive policies Conduct offensive and defensive drills for the strategy, adopt regular offensive and defensive methods, and the defensive side adopts reinforcement learning to defend.
